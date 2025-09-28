@@ -1,0 +1,6 @@
+{
+  "name": "the_site",
+  "engines": {
+    "nvim": "^0.11.0"
+  }
+}

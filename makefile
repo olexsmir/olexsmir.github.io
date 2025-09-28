@@ -1,0 +1,7 @@
+CMD=nvim --clean --headless -u ./minit.lua
+
+test:
+	$(CMD) -c "lua MiniTest.run()"
+
+build:
+	$(CMD) -l build.lua

@@ -1,0 +1,3 @@
+local rss = {}
+
+return rss
