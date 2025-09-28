@@ -53,4 +53,21 @@ html["even more nested html"] = function()
   )
 end
 
+html["simple page"] = function()
+  local node = h.el("html", { a.attr("lang", "en") }, {
+    h.el("head", {}, {
+      h.el("title", {}, { h.text "My Page" }),
+    }),
+    h.el("body", {}, {
+      h.el("h1", {}, { h.text "Welcome" }),
+      h.p({}, { h.text "This is a basic HTML page." }),
+    }),
+  })
+
+  t.eq(
+    h.render_page(node),
+    [[<!DOCTYPE html><html lang="en"><head><title>My Page</title></head><body><h1>Welcome</h1><p>This is a basic HTML page.</p></body></html>]]
+  )
+end
+
 return T

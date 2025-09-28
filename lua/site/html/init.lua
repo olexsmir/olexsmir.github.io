@@ -76,6 +76,10 @@ function html.render(node)
   return ""
 end
 
+function html.render_page(node)
+  return "<!DOCTYPE html>" .. html.render(node)
+end
+
 -- --- COMMON ELEMENTS
 -- stylua: ignore start
 
