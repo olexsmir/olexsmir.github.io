@@ -11,12 +11,7 @@ html["simple html"] = function()
 end
 
 html["simple html with attrs"] = function()
-  local node = h.el(
-    "div",
-    { a.attr("class", "some classes") },
-    { h.text "string" }
-  )
-
+  local node = h.div({ a.attr("class", "some classes") }, { h.text "string" })
   t.eq(h.render(node), [[<div class="some classes">string</div>]])
 end
 
@@ -30,10 +25,11 @@ html["self-closing tag"] = function()
 end
 
 html["nested html"] = function()
-  local node = h.el("div", { a.class "container" }, {
+  local node = h.div({ a.class "container" }, {
     h.el("h1", {}, { h.text "Title" }),
-    h.el("p", {}, { h.text "Paragraph" }),
+    h.p({}, { h.text "Paragraph" }),
   })
+
   t.eq(
     h.render(node),
     [[<div class="container"><h1>Title</h1><p>Paragraph</p></div>]]
@@ -41,16 +37,19 @@ html["nested html"] = function()
 end
 
 html["even more nested html"] = function()
-  local node = h.el("div", { a.class "container" }, {
+  local node = h.div({ a.class "container" }, {
     h.el("h1", {}, { h.text "Title" }),
-    h.el("div", {}, {
-      h.el("p", {}, { h.text "text" }),
+    h.div({}, {
+      h.p({}, {
+        h.text "text",
+        h.a({ a.href "google.com" }, { h.text "google" }),
+      }),
     }),
   })
 
   t.eq(
     h.render(node),
-    [[<div class="container"><h1>Title</h1><div><p>text</p></div></div>]]
+    [[<div class="container"><h1>Title</h1><div><p>text<a href="google.com">google</a></p></div></div>]]
   )
 end
 

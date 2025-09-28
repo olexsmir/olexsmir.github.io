@@ -1,9 +1,9 @@
 local html = {}
 
 ---@class site.HtmlNote
----@field text? string
 ---@field tag? string
----@field attributes? table<string, string>
+---@field text? string
+---@field attributes? site.HtmlAttribute[]
 ---@field children? site.HtmlNote[]
 
 ---@param tag string
@@ -75,5 +75,34 @@ function html.render(node)
 
   return ""
 end
+
+-- --- COMMON ELEMENTS
+-- stylua: ignore start
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.div(attributes, children) return html.el("div", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.span(attributes, children) return html.el("span", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.p(attributes, children) return html.el("p", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.a(attributes, children) return html.el("a", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.ul(attributes, children) return html.el("ul", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.li(attributes, children) return html.el("li", attributes, children) end
+
+-- stylua: ignore end
 
 return html

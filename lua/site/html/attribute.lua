@@ -1,20 +1,24 @@
-local attribute = {}
+local hattribute = {}
 
----@alias site.HtmlAttribute table<string, string>
+---@class site.HtmlAttribute
+---@field [string] string
 
----@param attr string
----@param value string|number
+---@param attribute string
+---@param value string
 ---@return site.HtmlAttribute
-function attribute.attr(attr, value)
-  return { [attr] = value }
+function hattribute.attr(attribute, value)
+  return { [attribute] = value }
 end
 
 -- COMMON ATTRIBUTES
-
 -- stylua: ignore start
+
 ---@param class string
----@return site.HtmlAttribute
-function attribute.class(class) return attribute.attr("class", class) end
+function hattribute.class(class) return hattribute.attr("class", class) end
+
+---@param link string
+function hattribute.href(link) return hattribute.attr("href", link) end
+
 -- stylua: ignore end
 
-return attribute
+return hattribute
