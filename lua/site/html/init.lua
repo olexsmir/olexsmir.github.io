@@ -1,7 +1,7 @@
 local html = {}
 
 ---@class site.HtmlNote
----@field tag? string
+---@field tag string
 ---@field text? string
 ---@field attributes? site.HtmlAttribute[]
 ---@field children? site.HtmlNote[]
@@ -46,14 +46,15 @@ function html.render(node)
   if node.text then
     return node.text
   elseif node.tag then
-    local attrs_str = ""
-    local keys = {}
+    local attr_keys = {}
     for k in pairs(node.attributes or {}) do
-      table.insert(keys, k)
+      table.insert(attr_keys, k)
     end
-    table.sort(keys)
-    for _, k in ipairs(keys) do
-      attrs_str = attrs_str .. string.format(' %s="%s"', k, node.attributes[k])
+    table.sort(attr_keys)
+
+    local attrs_str = ""
+    for _, v in pairs(attr_keys) do
+      attrs_str = attrs_str .. string.format(' %s="%s"', v, node.attributes[v])
     end
 
     if _self_closing_tags[node.tag] then
@@ -64,6 +65,7 @@ function html.render(node)
     for _, child in ipairs(node.children or {}) do
       children_str = children_str .. html.render(child)
     end
+
     return string.format(
       "<%s%s>%s</%s>",
       node.tag,
