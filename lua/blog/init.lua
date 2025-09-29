@@ -29,6 +29,10 @@ local function write(fpath, data)
   file.write(path, data)
 end
 
+local function write_page(fpath, node)
+  write(fpath, html.render_page(node))
+end
+
 function blog.build()
   ---@type site.Post[]
   local posts = vim
@@ -47,19 +51,19 @@ function blog.build()
   -- stylua: ignore
   write("feed.xml", rss.rss(posts, {
     email = "olexsmir@cock.li",
+    title = "olexsmir's blog",
     name = "olexsmir",
-    title = "olexsmir",
     feed_url = site_url .. "/feed.xml",
     home_url = site_url,
   }))
 
   write("style.css", css.style(styles))
-  write("404.html", html.render_page(pages.not_found()))
-  write("index.html", html.render_page(pages.home(recent_posts)))
-  write("posts.html", html.render_page(pages.posts(posts)))
+  write_page("404.html", pages.not_found())
+  write_page("index.html", pages.home(recent_posts))
+  write_page("posts.html", pages.posts(posts))
 
   for _, p in pairs(posts) do
-    write(p.meta.slug .. ".html", html.render_page(pages.post(p.meta.title, "", p.content)))
+    write(p.meta.slug .. ".html", html.render_page(pages.post(p)))
   end
 end
 

@@ -118,13 +118,16 @@ function pages.posts(posts)
   })
 end
 
----@param title string
----@param desc string
----@param content string
+---@param post site.Post
 ---@return site.HtmlNote
-function pages.post(title, desc, content)
-  return with_body(title, desc, {
-    h.raw(content),
+function pages.post(post)
+  return with_body(post.meta.title, "", {
+    header(),
+    h.main({}, {
+      h.el("h1", {}, { h.text(post.meta.title) }),
+      h.p({}, { h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }) }),
+      h.raw(post.content),
+    }),
   })
 end
 
