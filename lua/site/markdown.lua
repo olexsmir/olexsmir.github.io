@@ -1240,5 +1240,9 @@ function OptionParser:run(args)
 end
 
 return {
-  markdown = markdown,
+  markdown = function(text)
+    -- it adds some symbol at the start and at the end of a output
+    -- that's the simplest way to deal with it
+    return markdown(text):sub(2, -2)
+  end,
 }
