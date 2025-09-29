@@ -24,7 +24,7 @@ css["nested-styles"] = function()
     },
   }
 
-  t.eq(c.style(rules), [[body{h1{color:red};margin:0;}]])
+  t.eq(c.style(rules), [[body{margin:0;}body h1{color:red;}]])
 end
 
 css["camelCase properties"] = function()
@@ -53,14 +53,34 @@ css["deep nesting"] = function()
       padding = "10px",
       [".inner"] = {
         margin = 0,
-        span = {
-          fontWeight = "bold",
-        },
+        span = { fontWeight = "bold", },
+        ["&:hover"] = { color = "blue", },
       },
     },
   }
 
-  t.eq(c.style(rules), [[.container{.inner{margin:0;span{font-weight:bold}};padding:10px;}]])
+  t.eq(
+    c.style(rules),
+    [[.container{padding:10px;}.container .inner{margin:0;}.container .inner span{font-weight:bold;}.container .inner:hover{color:blue;}]]
+  )
+end
+
+css["@media"] = function()
+  local rules = {
+    ["@media screen and (min-width: 1200px)"] = {
+      margin = 0,
+    },
+  }
+  t.eq(c.style(rules), [[@media screen and (min-width: 1200px){margin:0;}]])
+end
+
+css[":root"] = function()
+  local rules = {
+    [":root"] = {
+      ["--h1-size"] = "3rem",
+    },
+  }
+  t.eq(c.style(rules), [[:root{--h1-size:3rem;}]])
 end
 
 return T
