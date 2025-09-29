@@ -38,12 +38,19 @@ function html.raw(html_str)
 end
 
 local _self_closing_tags = {
-  img = {},
+  area = {},
+  base = {},
   br = {},
+  col = {},
+  embed = {},
   hr = {},
+  img = {},
   input = {},
+  -- link = {}, -- ignored because it needed for rss
   meta = {},
-  link = {},
+  source = {},
+  track = {},
+  wbr = {},
 }
 
 ---@param node site.HtmlNote
