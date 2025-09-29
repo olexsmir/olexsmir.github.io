@@ -41,9 +41,9 @@ function rss.rss(posts, config)
       h.el("id", {}, { h.text(config.home_url .. "/") }),
       h.el("link", { a.href(config.home_url), a.attr("rel", "alternate") }, {}),
       h.el("link", {
-        a.attr("type", "application/atom+xml"),
         a.href(config.feed_url),
         a.attr("rel", "self"),
+        a.attr("type", "application/atom+xml"),
       }, {}),
       h.el("updated", {}, { h.text(date(posts[1].meta.date)) }),
       h.el("author", {}, {
