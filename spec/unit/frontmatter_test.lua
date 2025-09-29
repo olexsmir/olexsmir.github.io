@@ -18,6 +18,21 @@ frontmatter["should extract from frontmatter"] = function()
   })
 end
 
+frontmatter["support options with spaces"] = function()
+  local input = {
+    "---",
+    "title = The title",
+    "link one = some long thing here",
+    "---",
+    "the content is here",
+  }
+
+  t.eq(f.extract(input), {
+    title = "The title",
+    ["link one"] = "some long thing here",
+  })
+end
+
 frontmatter["should return nil if there's no frontmatter"] = function()
   local input = {
     "there's no frontmatter",
