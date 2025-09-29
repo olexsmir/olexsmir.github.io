@@ -51,8 +51,9 @@ function blog.build()
   -- stylua: ignore
   write("feed.xml", rss.rss(posts, {
     email = "olexsmir@cock.li",
-    title = "olexsmir's blog",
     name = "olexsmir",
+    title = "olexsmir's blog",
+    subtitle = "olexsmir's blog feed",
     feed_url = site_url .. "/feed.xml",
     home_url = site_url,
   }))

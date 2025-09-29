@@ -16,7 +16,7 @@ function rss.escape_html(html)
   end))
 end
 
----@param config {feed_url:string, home_url:string, name:string, email:string}
+---@param config {feed_url:string, home_url:string, title:string, name:string, email:string, subtitle:string}
 ---@param posts site.Post[]
 ---@return string
 function rss.rss(posts, config)
@@ -36,7 +36,7 @@ function rss.rss(posts, config)
 
   return [[<?xml version="1.0" encoding="utf-8"?>]]
     .. h.render(h.el("feed", { a.attr("xmlns", "http://www.w3.org/2005/Atom") }, {
-      h.el("title", {}, { h.text(config.name) }),
+      h.el("title", {}, { h.text(config.title) }),
       h.el("subtitle", {}, { h.text "olexsmir's blog feed" }),
       h.el("id", {}, { h.text(config.home_url .. "/") }),
       h.el("link", { a.href(config.home_url), a.attr("rel", "alternate") }, {}),
