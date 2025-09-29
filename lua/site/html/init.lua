@@ -79,13 +79,7 @@ function html.render(node)
       children_str = children_str .. html.render(child)
     end
 
-    return string.format(
-      "<%s%s>%s</%s>",
-      node.tag,
-      attrs_str,
-      children_str,
-      node.tag
-    )
+    return string.format("<%s%s>%s</%s>", node.tag, attrs_str, children_str, node.tag)
   end
 
   return ""
@@ -101,6 +95,13 @@ end
 ---@param attributes site.HtmlAttribute[]
 ---@param children site.HtmlNote[]
 function html.div(attributes, children) return html.el("div", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.main(attributes, children) return html.el("main", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+function html.meta(attributes) return html.el("meta", attributes, {}) end
 
 ---@param attributes site.HtmlAttribute[]
 ---@param children site.HtmlNote[]

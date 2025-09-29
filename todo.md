@@ -4,6 +4,7 @@
 - [ ] maybe even write some parts in fennel
 - [ ] switch mini.test to busted #next
 - [ ] setup `llscheck`
+- [ ] should error if slug is used more then once
 
 # Archive
 - [x] `done:20250929-1349` add github action for automatic builds

@@ -33,13 +33,13 @@ frontmatter["support options with spaces"] = function()
   })
 end
 
-frontmatter["should return nil if there's no frontmatter"] = function()
+frontmatter["should return {} if there's no frontmatter"] = function()
   local input = {
     "there's no frontmatter",
     "just text",
   }
 
-  t.eq(f.extract(input), nil)
+  t.eq(f.extract(input), {})
 end
 
 frontmatter["should return empty list if frontmatter is empty"] = function()

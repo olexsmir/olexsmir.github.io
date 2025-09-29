@@ -1,10 +1,10 @@
 local frontmatter = {}
 
 ---@param lines string[]
----@return table|nil
+---@return table
 function frontmatter.extract(lines)
   if lines[1] ~= "---" then
-    return nil
+    return {}
   end
 
   for i = 2, #lines do
@@ -22,6 +22,8 @@ function frontmatter.extract(lines)
       return result
     end
   end
+
+  return {}
 end
 
 ---@param lines string[]

@@ -1,24 +1,35 @@
+local html = require "site.html"
 local post = require "site.post"
 local file = require "site.file"
+local rss = require "site.rss"
+
+local pages = require "blog.pages"
 local blog = {}
 
-local config = {
-  output_dir = "build",
-  posts_dir = "posts",
-  assets_dir = "assets",
-}
+local site_url = "https://olexsmir.github.io"
+local output_dir = "build"
+local posts_dir = "posts"
 
 function blog.build()
   local posts = vim
-    .iter(file.list_dir(config.posts_dir))
+    .iter(file.list_dir(posts_dir))
     :map(function(fname)
-      return post.read_file(config.posts_dir .. "/" .. fname)
+      return post.read_file(posts_dir .. "/" .. fname)
     end)
     :totable()
-
   post.sort_by_date(posts)
 
-  vim.print(posts)
+  file.write(
+    vim.fs.joinpath(output_dir, "feed.xml"),
+    rss.rss({
+      email = "olexsmir@cock.li",
+      name = "olexsmir",
+      title = "olexsmir",
+      feed_url = site_url .. "/feed.xml",
+      home_url = site_url,
+    }, posts)
+  )
+  file.write(vim.fs.joinpath(output_dir, "404.html"), html.render_page(pages.not_found()))
 end
 
 return blog

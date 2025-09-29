@@ -13,9 +13,19 @@ function file.read(fpath)
 end
 
 ---@param fpath string
----@param content string[]
+---@param content string
 function file.write(fpath, content)
-  vim.fn.writefile(content, fpath)
+  vim.print(vim.fn.writefile({ content }, fpath))
+end
+
+---@param path string
+function file.rm(path)
+  vim.fs.rm(path)
+end
+
+---@param path string
+function file.mkdir(path)
+  vim.fn.mkdir(path)
 end
 
 return file
