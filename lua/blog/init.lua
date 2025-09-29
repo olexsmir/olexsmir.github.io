@@ -13,7 +13,8 @@ local output_dir = "build"
 local posts_dir = "posts"
 
 local function prepare()
-  if vim.uv.fs_stat(output_dir).type or "" == "directory" then
+  local build_dir_stats = vim.uv.fs_stat(output_dir)
+  if not build_dir_stats or build_dir_stats.type == "directory" then
     vim.print("deleting " .. output_dir)
     file.rm(output_dir)
   end
