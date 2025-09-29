@@ -15,7 +15,7 @@ end
 ---@param fpath string
 ---@param content string
 function file.write(fpath, content)
-  vim.print(vim.fn.writefile({ content }, fpath))
+  vim.fn.writefile({ content }, fpath)
 end
 
 ---@param path string

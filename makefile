@@ -7,7 +7,4 @@ test:
 	$(CMD) -c "lua MiniTest.run()"
 
 build:
-	$(CMD) -c "lua require'blog'.build()" -l
-
-nvim:
-	nvim --clean -u ./minit.lua
+	$(CMD) -l build.lua
