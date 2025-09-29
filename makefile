@@ -1,3 +1,6 @@
+.SILENT:
+.PHONY:
+
 CMD=nvim --clean --headless -u ./minit.lua
 
 test:
