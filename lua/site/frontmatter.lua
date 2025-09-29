@@ -24,4 +24,21 @@ function frontmatter.extract(lines)
   end
 end
 
+---@param lines string[]
+---@return string[]|nil
+function frontmatter.content(lines)
+  if lines[1] ~= "---" then
+    return lines
+  end
+
+  return vim
+    .iter(lines)
+    :skip(1)
+    :skip(function(el)
+      return el ~= "---"
+    end)
+    :skip(1)
+    :totable()
+end
+
 return frontmatter
