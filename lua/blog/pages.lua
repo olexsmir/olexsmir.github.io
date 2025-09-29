@@ -28,6 +28,10 @@ local function with_body(page_title, page_desc, body)
         a.attr("title", "olexsmir.github.io posts feed"),
         a.href "olexsmir.github.io/feed.xml",
       }, {}),
+      h.el("link", {
+        a.attr("rel", "stylesheet"),
+        a.href "style.css",
+      }, {}),
       h.meta { a.attr("description", page_desc) },
       meta_property("og:description", page_desc),
       meta_property("og:site_name", "olexsmir's blog"),

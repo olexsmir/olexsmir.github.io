@@ -2,8 +2,10 @@ local html = require "site.html"
 local post = require "site.post"
 local file = require "site.file"
 local rss = require "site.rss"
+local css = require "site.css"
 
 local pages = require "blog.pages"
+local styles = require "blog.styles"
 local blog = {}
 
 local site_url = "https://olexsmir.github.io"
@@ -30,6 +32,7 @@ function blog.build()
     }, posts)
   )
   file.write(vim.fs.joinpath(output_dir, "404.html"), html.render_page(pages.not_found()))
+  file.write(vim.fs.joinpath(output_dir, "style.css"), css.style(styles))
 end
 
 return blog
