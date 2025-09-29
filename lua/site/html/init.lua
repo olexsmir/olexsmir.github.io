@@ -31,6 +31,12 @@ function html.text(text)
   return { text = text }
 end
 
+---@param html_str string
+---@return site.HtmlNote
+function html.raw(html_str)
+  return { text = html_str }
+end
+
 local _self_closing_tags = {
   img = {},
   br = {},
@@ -58,7 +64,7 @@ function html.render(node)
     end
 
     if _self_closing_tags[node.tag] then
-      return string.format("<%s%s />", node.tag, attrs_str)
+      return string.format("<%s%s>", node.tag, attrs_str)
     end
 
     local children_str = ""

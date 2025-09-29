@@ -21,7 +21,7 @@ html["self-closing tag"] = function()
     { a.attr("src", "image.png"), a.attr("alt", "Alt text") },
     {}
   )
-  t.eq(h.render(node), [[<img alt="Alt text" src="image.png" />]])
+  t.eq(h.render(node), [[<img alt="Alt text" src="image.png">]])
 end
 
 html["nested html"] = function()
@@ -67,6 +67,22 @@ html["simple page"] = function()
   t.eq(
     h.render_page(node),
     [[<!DOCTYPE html><html lang="en"><head><title>My Page</title></head><body><h1>Welcome</h1><p>This is a basic HTML page.</p></body></html>]]
+  )
+end
+
+html["row html can be 'embedded'"] = function()
+  local node = h.el("html", {}, {
+    h.el("head", {}, { h.el("title", {}, {
+      h.text "My Page",
+    }) }),
+    h.el("body", {}, {
+      h.raw "<row-element some-kind-of-tag>",
+    }),
+  })
+
+  t.eq(
+    h.render(node),
+    "<html><head><title>My Page</title></head><body><row-element some-kind-of-tag></body></html>"
   )
 end
 
