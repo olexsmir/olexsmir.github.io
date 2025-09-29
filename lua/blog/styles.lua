@@ -28,16 +28,16 @@ return {
   },
 
   body = {
-    ["font-family"] = "var(--font-secondary)",
-    ["font-size"] = "var(--font-scale)",
+    font_family = "var(--font-secondary)",
+    font_size = "var(--font-scale)",
     margin = "auto",
     padding = "20px",
-    ["max-width"] = "var(--width)",
-    ["text-align"] = "left",
-    ["background-color"] = "var(--background-color)",
-    ["word-wrap"] = "break-word",
-    ["overflow-wrap"] = "break-word",
-    ["line-height"] = "1.5",
+    max_width = "var(--width)",
+    text_align = "left",
+    background_color = "var(--background-color)",
+    word_wrap = "break-word",
+    overflow_wrap = "break-word",
+    line_height = "1.5",
     color = "var(--text-color)",
   },
 
@@ -51,12 +51,12 @@ return {
     cursor = "pointer",
     ["text-decoration"] = "none",
 
-    [":hover"] = { ["text-decoration"] = "underline" },
+    ["&:hover"] = { text_decoration = "underline" },
   },
 
   main = { ["line-height"] = "1.6" },
   table = { ["width"] = "100%" },
-  img = { ["max-width"] = "100%" },
+  img = { max_width = "100%" },
   ["nav a"] = { ["margin-right"] = "8px" },
   ["strong, b"] = { color = "var(--heading-color)" },
   [".inline"] = { width = "auto !important" },
@@ -67,49 +67,49 @@ return {
   },
 
   time = {
-    ["font-family"] = "monospace",
-    ["font-style"] = "normal",
-    ["font-size"] = "15px",
+    font_family = "monospace",
+    font_style = "normal",
+    font_size = "15px",
   },
 
   hr = {
     border = "0",
-    ["border-top"] = "1px dashed",
+    border_top = "1px dashed",
   },
 
   code = {
-    ["font-family"] = "monospace",
+    font_family = "monospace",
     padding = "2px",
-    ["background-color"] = "var(--code-background-color)",
+    background_color = "var(--code-background-color)",
     color = "var(--code-color)",
-    ["border-radius"] = "3px",
+    border_radius = "3px",
   },
 
   blockquote = {
     color = "var(--code-color)",
-    ["border-left"] = "1px solid #999",
-    ["padding-left"] = "20px",
-    ["font-style"] = "italic",
+    border_left = "1px solid #999",
+    padding_left = "20px",
+    font_style = "italic",
   },
 
   footer = {
     padding = "25px 0",
-    ["text-align"] = "center",
+    text_align = "center",
   },
 
   [".title"] = {
-    [":hover"] = { ["text-decoration"] = "none" },
-    h1 = { ["font-size"] = "1.5em" },
+    ["&:hover"] = { ["text-decoration"] = "none" },
+    ["&h1"] = { ["font-size"] = "1.5em" },
   },
 
   [".highlight, .code"] = {
     padding = "1px 15px",
     color = "var(--code-color)",
-    ["background-color"] = "var(--code-background-color)",
-    ["border-radius"] = "3px",
-    ["margin-block-start"] = "1em",
-    ["margin-block-end"] = "1em",
-    ["overflow-x"] = "auto",
+    background_color = "var(--code-background-color)",
+    border_radius = "3px",
+    margin_block_start = "1em",
+    margin_block_end = "1em",
+    overflow_x = "auto",
   },
 
   ul = {

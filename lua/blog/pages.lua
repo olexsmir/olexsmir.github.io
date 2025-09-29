@@ -55,6 +55,7 @@ local function header()
     }),
     h.el("nav", {}, {
       h.p({}, {
+        h.a({ a.href "/" }, { h.text "home" }),
         h.a({ a.href "/posts" }, { h.text "posts" }),
         h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
         h.a({ a.href "/feed.xml" }, { h.text "rss" }),
