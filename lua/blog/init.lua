@@ -13,7 +13,7 @@ local output_dir = "build"
 local posts_dir = "posts"
 
 local function prepare()
-  if vim.uv.fs_stat(output_dir).type == "directory" then
+  if vim.uv.fs_stat(output_dir).type or "" == "directory" then
     vim.print("deleting " .. output_dir)
     file.rm(output_dir)
   end
@@ -42,7 +42,6 @@ function blog.build()
   local recent_posts = vim.iter(posts):slice(1, 5):totable()
 
   prepare()
-  vim.print(posts)
 
   -- stylua: ignore
   write("feed.xml", rss.rss(posts, {
