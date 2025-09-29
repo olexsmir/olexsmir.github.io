@@ -14,9 +14,6 @@ end
 ---@param body site.HtmlNote[]
 ---@return site.HtmlNote
 local function with_body(page_title, page_desc, body)
-  local favicon =
-    "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E🌀%3C/text%3E%3C/svg%3E"
-
   return h.el("html", { a.attr("lang", "en,uk") }, {
     h.el("head", {}, {
       h.el("title", {}, { h.text(page_title) }),
@@ -38,9 +35,8 @@ local function with_body(page_title, page_desc, body)
       h.el("link", {
         a.attr("rel", "shortcut icon"),
         a.attr("type", "image/svg+xml"),
-        a.href(favicon),
+        a.href "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E🌀%3C/text%3E%3C/svg%3E",
       }, {}),
-      h.el("icon", {}, { h.text(favicon) }),
       h.meta { a.attr("description", page_desc) },
       meta_property("og:description", page_desc),
       meta_property("og:site_name", "olexsmir's blog"),
