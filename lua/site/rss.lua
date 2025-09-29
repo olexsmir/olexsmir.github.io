@@ -6,7 +6,7 @@ local rss = {}
 ---@param config {feed_url:string, home_url:string, name:string, email:string}
 ---@param posts site.Post[]
 ---@return string
-function rss.rss(config, posts)
+function rss.rss(posts, config)
   local entries = vim
     .iter(posts)
     ---@param post site.Post
@@ -16,7 +16,7 @@ function rss.rss(config, posts)
         h.el("link", { a.href(config.home_url .. "/" .. post.meta.slug) }, {}),
         h.el("id", {}, { h.text(config.home_url .. "/" .. post.meta.slug) }),
         h.el("updated", {}, { h.text(date(post.meta.date)) }),
-        h.el("content", { a.attr("type", "html") }, { h.raw(table.concat(post.content, " ")) }), -- TODO: render me
+        h.el("content", { a.attr("type", "html") }, { h.raw(post.content) }), -- TODO: render me
       })
     end)
     :totable()

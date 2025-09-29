@@ -20,7 +20,7 @@ end
 
 ---@param path string
 function file.rm(path)
-  vim.fs.rm(path)
+  vim.fs.rm(path, { force = true, recursive = true })
 end
 
 ---@param path string

@@ -63,6 +63,8 @@ local function flatten_css_rules(rules)
   return all_rules
 end
 
+---@param rules table
+---@return string
 function css.style(rules)
   local all_rules = flatten_css_rules(rules)
 

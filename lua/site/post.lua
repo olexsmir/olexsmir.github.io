@@ -9,14 +9,14 @@ local post = {}
 ---@field [string] string
 
 ---@class site.Post
----@field content string[]
+---@field content string
 ---@field meta site.PostMeta
 
 ---@param fpath string
 ---@return site.Post
 function post.read_file(fpath)
   local p = file.read(fpath)
-  local content = frontmatter.content(p)
+  local content = table.concat(frontmatter.content(p) or {}) -- TODO: convert markdown to the html
   local meta = frontmatter.extract(p)
   assert(meta["title"] ~= nil, (fpath .. " doesn't have title"))
   assert(meta["date"] ~= nil, (fpath .. " doesn't have date"))

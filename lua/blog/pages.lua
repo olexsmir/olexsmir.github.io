@@ -14,7 +14,7 @@ end
 ---@param body site.HtmlNote[]
 ---@return site.HtmlNote
 local function with_body(page_title, page_desc, body)
-  return h.el("html", { a.attr("lang", "en") }, {
+  return h.el("html", { a.attr("lang", "en,uk") }, {
     h.el("head", {}, {
       h.el("title", {}, { h.text(page_title) }),
       h.meta { a.attr("charset", "utf-8") },
@@ -32,18 +32,40 @@ local function with_body(page_title, page_desc, body)
         a.attr("rel", "stylesheet"),
         a.href "style.css",
       }, {}),
+      h.el("link", {
+        a.attr("rel", "shortcut icon"),
+        a.attr("type", "image/svg+xml"),
+        a.href "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E🌀%3C/text%3E%3C/svg%3E",
+      }, {}),
       h.meta { a.attr("description", page_desc) },
       meta_property("og:description", page_desc),
       meta_property("og:site_name", "olexsmir's blog"),
       meta_property("og:title", page_title),
       meta_property("og:type", "website"),
+      -- TODO: add twitter meta props
     }),
-    h.el("body", {}, body),
+    h.el("body", { a.class "home" }, body),
+  })
+end
+
+local function header()
+  return h.el("header", {}, {
+    h.a({ a.class "title", a.href "/" }, {
+      h.el("h1", {}, { h.text "olexsmir's blog" }),
+    }),
+    h.el("nav", {}, {
+      h.p({}, {
+        h.a({ a.href "/posts" }, { h.text "posts" }),
+        h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
+        h.a({ a.href "/feed.xml" }, { h.text "rss" }),
+      }),
+    }),
   })
 end
 
 function pages.not_found()
   return with_body("Not found", "There's nothing here", {
+    header(),
     h.main({}, {
       h.el("h1", {}, { h.text "There's nothing here!" }),
       h.p({}, {
@@ -51,6 +73,47 @@ function pages.not_found()
         h.el("a", { a.href "/" }, { h.text "home page" }),
       }),
     }),
+  })
+end
+
+---@param recent_posts site.Post[]
+---@return site.HtmlNote
+function pages.home(recent_posts)
+  local rposts = vim
+    .iter(recent_posts)
+    :map(function(post)
+      return h.li({ a.href(post.meta.slug) }, {
+        h.span({}, {
+          h.el("i", {}, {
+            h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
+          }),
+        }),
+        h.a({ a.href(post.meta.slug) }, { h.text(post.meta.title) }),
+      })
+    end)
+    :totable()
+
+  return with_body("olexsmir", "A personal blog where I share my thoughts", {
+    header(),
+    h.el("main", {}, {
+      h.p({}, {
+        h.text "Hi, and welcome to my blog.",
+      }),
+      h.div({}, {
+        h.el("h2", {}, { h.text "Recent posts" }),
+        h.ul({ a.class "blog-posts" }, rposts),
+      }),
+    }),
+  })
+end
+
+---@param title string
+---@param desc string
+---@param content string
+---@return site.HtmlNote
+function pages.post(title, desc, content)
+  return with_body(title, desc, {
+    h.raw(content),
   })
 end
 
