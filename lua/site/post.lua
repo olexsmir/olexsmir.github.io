@@ -1,5 +1,6 @@
 local file = require "site.file"
 local frontmatter = require "site.frontmatter"
+local markdown = require "site.markdown"
 local post = {}
 
 ---@class site.PostMeta
@@ -16,13 +17,13 @@ local post = {}
 ---@return site.Post
 function post.read_file(fpath)
   local p = file.read(fpath)
-  local content = table.concat(frontmatter.content(p) or {}) -- TODO: convert markdown to the html
+  local content = table.concat(frontmatter.content(p) or {})
   local meta = frontmatter.extract(p)
   assert(meta["title"] ~= nil, (fpath .. " doesn't have title"))
   assert(meta["date"] ~= nil, (fpath .. " doesn't have date"))
   assert(meta["slug"] ~= nil, (fpath .. " doesn't have slug"))
 
-  return { meta = meta, content = content }
+  return { meta = meta, content = markdown.markdown(content) }
 end
 
 -- MUTATES THE TABLE
