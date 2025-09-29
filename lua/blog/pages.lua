@@ -76,11 +76,9 @@ function pages.not_found()
   })
 end
 
----@param recent_posts site.Post[]
----@return site.HtmlNote
-function pages.home(recent_posts)
-  local rposts = vim
-    .iter(recent_posts)
+local function list_posts(posts)
+  return vim
+    .iter(posts)
     :map(function(post)
       return h.li({ a.href(post.meta.slug) }, {
         h.span({}, {
@@ -92,17 +90,30 @@ function pages.home(recent_posts)
       })
     end)
     :totable()
+end
 
+---@param recent_posts site.Post[]
+---@return site.HtmlNote
+function pages.home(recent_posts)
   return with_body("olexsmir", "A personal blog where I share my thoughts", {
     header(),
-    h.el("main", {}, {
+    h.main({}, {
       h.p({}, {
         h.text "Hi, and welcome to my blog.",
       }),
       h.div({}, {
         h.el("h2", {}, { h.text "Recent posts" }),
-        h.ul({ a.class "blog-posts" }, rposts),
+        h.ul({ a.class "blog-posts" }, list_posts(recent_posts)),
       }),
+    }),
+  })
+end
+
+function pages.posts(posts)
+  return with_body("posts", "list of all my posts", {
+    header(),
+    h.main({}, {
+      h.ul({ a.class "blog-posts" }, list_posts(posts)),
     }),
   })
 end

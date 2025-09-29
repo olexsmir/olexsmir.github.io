@@ -56,6 +56,7 @@ function blog.build()
   write("style.css", css.style(styles))
   write("404.html", html.render_page(pages.not_found()))
   write("index.html", html.render_page(pages.home(recent_posts)))
+  write("posts.html", html.render_page(pages.posts(posts)))
 
   for _, p in pairs(posts) do
     write(p.meta.slug .. ".html", html.render_page(pages.post(p.meta.title, "", p.content)))
