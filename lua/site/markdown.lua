@@ -1,1248 +1,580 @@
--- https://github.com/mpeterv/markdown/blob/master/markdown.lua
+--- https://github.com/bakpakin/luamd/blob/master/md.lua
 
-----------------------------------------------------------------------
--- Utility functions
-----------------------------------------------------------------------
+--[[
+Copyright (c) 2016 Calvin Rose <calsrose@gmail.com>
 
-local unpack = table.unpack or unpack
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
--- Returns the result of mapping the values in table t through the function f
-local function map(t, f)
-  local out = {}
-  for k, v in pairs(t) do
-    out[k] = f(v, k)
-  end
-  return out
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+]]
+
+local concat = table.concat
+local sub = string.sub
+local match = string.match
+local format = string.format
+local gmatch = string.gmatch
+local byte = string.byte
+local find = string.find
+local lower = string.lower
+local type = type
+local pcall = pcall
+
+--------------------------------------------------------------------------------
+-- Stream Utils
+--------------------------------------------------------------------------------
+
+local function stringLineStream(str)
+  return gmatch(str, "([^\n\r]*)\r?\n?")
 end
 
--- Functional style if statement. (NOTE: no short circuit evaluation)
-local function iff(t, a, b)
-  if t then
-    return a
-  else
-    return b
+local function tableLineStream(t)
+  local index = 0
+  return function()
+    index = index + 1
+    return t[index]
   end
 end
 
--- Splits the text into an array of separate lines.
-local function split(text, sep)
-  sep = sep or "\n"
-  local lines = {}
-  local pos = 1
+local function bufferStream(linestream)
+  local bufferedLine = linestream()
+  return function()
+    bufferedLine = linestream()
+    return bufferedLine
+  end, function()
+    return bufferedLine
+  end
+end
+
+--------------------------------------------------------------------------------
+-- Line Level Operations
+--------------------------------------------------------------------------------
+
+local lineDelimiters = { "`", "__", "**", "_", "*", "~~" }
+local function findDelim(str, start, max)
+  local delim = nil
+  local min = 1 / 0
+  local finish = 1 / 0
+  max = max or #str
+  for i = 1, #lineDelimiters do
+    local pos, fin = find(str, lineDelimiters[i], start, true)
+    if pos and pos < min and pos <= max then
+      min = pos
+      finish = fin
+      delim = lineDelimiters[i]
+    end
+  end
+  return delim, min, finish
+end
+
+local function externalLinkEscape(str, t)
+  local nomatches = true
+  for m1, m2, m3 in gmatch(str, "(.*)%[(.*)%](.*)") do
+    if nomatches then
+      t[#t + 1] = match(m1, "^(.-)!?$")
+      nomatches = false
+    end
+    if byte(m1, #m1) == byte "!" then
+      t[#t + 1] = { type = "img", attributes = { alt = m2 } }
+    else
+      t[#t + 1] = { m2, type = "a" }
+    end
+    t[#t + 1] = m3
+  end
+  if nomatches then
+    t[#t + 1] = str
+  end
+end
+
+local function linkEscape(str, t)
+  local nomatches = true
+  for m1, m2, m3, m4 in gmatch(str, "(.*)%[(.*)%]%((.*)%)(.*)") do
+    if nomatches then
+      externalLinkEscape(match(m1, "^(.-)!?$"), t)
+      nomatches = false
+    end
+    if byte(m1, #m1) == byte "!" then
+      t[#t + 1] = {
+        type = "img",
+        attributes = {
+          src = m3,
+          alt = m2,
+        },
+        noclose = true,
+      }
+    else
+      t[#t + 1] = { m2, type = "a", attributes = { href = m3 } }
+    end
+    externalLinkEscape(m4, t)
+  end
+  if nomatches then
+    externalLinkEscape(str, t)
+  end
+end
+
+local lineDeimiterNames = {
+  ["`"] = "code",
+  ["__"] = "strong",
+  ["**"] = "strong",
+  ["_"] = "em",
+  ["*"] = "em",
+  ["~~"] = "strike",
+}
+local function lineRead(str, start, finish)
+  start, finish = start or 1, finish or #str
+  local searchIndex = start
+  local tree = {}
   while true do
-    local b, e = text:find(sep, pos)
-    if not b then
-      table.insert(lines, text:sub(pos))
+    local delim, dstart, dfinish = findDelim(str, searchIndex, finish)
+    if not delim then
+      linkEscape(sub(str, searchIndex, finish), tree)
       break
     end
-    table.insert(lines, text:sub(pos, b - 1))
-    pos = e + 1
-  end
-  return lines
-end
-
--- Converts tabs to spaces
-local function detab(text)
-  local tab_width = 4
-  local function rep(match)
-    local spaces = -match:len()
-    while spaces < 1 do
-      spaces = spaces + tab_width
+    if dstart > searchIndex then
+      linkEscape(sub(str, searchIndex, dstart - 1), tree)
     end
-    return match .. string.rep(" ", spaces)
-  end
-  text = text:gsub("([^\n]-)\t", rep)
-  return text
-end
-
--- Applies string.find for every pattern in the list and returns the first match
-local function find_first(s, patterns, index)
-  local res = {}
-  for _, p in ipairs(patterns) do
-    local match = { s:find(p, index) }
-    if #match > 0 and (#res == 0 or match[1] < res[1]) then
-      res = match
+    local nextdstart, nextdfinish = find(str, delim, dfinish + 1, true)
+    if nextdstart then
+      if delim == "`" then
+        tree[#tree + 1] = {
+          sub(str, dfinish + 1, nextdstart - 1),
+          type = "code",
+        }
+      else
+        local subtree = lineRead(str, dfinish + 1, nextdstart - 1)
+        subtree.type = lineDeimiterNames[delim]
+        tree[#tree + 1] = subtree
+      end
+      searchIndex = nextdfinish + 1
+    else
+      tree[#tree + 1] = {
+        delim,
+      }
+      searchIndex = dfinish + 1
     end
   end
-  return unpack(res)
+  return tree
 end
 
--- If a replacement array is specified, the range [start, stop] in the array is replaced
--- with the replacement array and the resulting array is returned. Without a replacement
--- array the section of the array between start and stop is returned.
-local function splice(array, start, stop, replacement)
-  if replacement then
-    local n = stop - start + 1
-    while n > 0 do
-      table.remove(array, start)
-      n = n - 1
-    end
-    for _, v in ipairs(replacement) do
-      table.insert(array, start, v)
-    end
-    return array
-  else
-    local res = {}
-    for i = start, stop do
-      table.insert(res, array[i])
-    end
-    return res
-  end
-end
-
--- Outdents the text one step.
-local function outdent(text)
-  text = "\n" .. text
-  text = text:gsub("\n  ? ? ?", "\n")
-  text = text:sub(2)
-  return text
-end
-
--- Indents the text one step.
-local function indent(text)
-  text = text:gsub("\n", "\n    ")
-  return text
-end
-
--- Does a simple tokenization of html data. Returns the data as a list of tokens.
--- Each token is a table with a type field (which is either "tag" or "text") and
--- a text field (which contains the original token data).
-local function tokenize_html(html)
-  local tokens = {}
-  local pos = 1
-  while true do
-    local start = find_first(html, { "<!%-%-", "<[a-z/!$]", "<%?" }, pos)
-    if not start then
-      table.insert(tokens, { type = "text", text = html:sub(pos) })
+local function getIndentLevel(line)
+  local level = 0
+  for i = 1, #line do
+    local b = byte(line, i)
+    if b == byte " " or b == byte ">" then
+      level = level + 1
+    elseif b == byte "\t" then
+      level = level + 4
+    else
       break
     end
-    if start ~= pos then
-      table.insert(tokens, { type = "text", text = html:sub(pos, start - 1) })
-    end
-
-    local _, stop
-    if html:match("^<!%-%-", start) then
-      _, stop = html:find("%-%->", start)
-    elseif html:match("^<%?", start) then
-      _, stop = html:find("?>", start)
-    else
-      _, stop = html:find("%b<>", start)
-    end
-    if not stop then
-      -- error("Could not match html tag " .. html:sub(start,start+30))
-      table.insert(tokens, { type = "text", text = html:sub(start, start) })
-      pos = start + 1
-    else
-      table.insert(tokens, { type = "tag", text = html:sub(start, stop) })
-      pos = stop + 1
-    end
   end
-  return tokens
+  return level
 end
 
-----------------------------------------------------------------------
--- Hash
-----------------------------------------------------------------------
+local function stripIndent(line, level, ignorepattern) -- luacheck: no unused args
+  local currentLevel = -1
+  for i = 1, #line do
+    if byte(line, i) == byte "\t" then
+      currentLevel = currentLevel + 4
+    elseif byte(line, i) == byte " " or byte(line, i) == byte ">" then
+      currentLevel = currentLevel + 1
+    else
+      return sub(line, i, -1)
+    end
+    if currentLevel == level then
+      return sub(line, i, -1)
+    elseif currentLevel > level then
+      local front = ""
+      for j = 1, currentLevel - level do
+        front = front .. " "
+      end -- luacheck: no unused args
+      return front .. sub(line, i, -1)
+    end
+  end
+end
 
--- This is used to "hash" data into alphanumeric strings that are unique
--- in the document. (Note that this is not cryptographic hash, the hash
--- function is not one-way.) The hash procedure is used to protect parts
--- of the document from further processing.
+--------------------------------------------------------------------------------
+-- Useful variables
+--------------------------------------------------------------------------------
+local NEWLINE = "\n"
 
-local HASH = {
-  -- Has the hash been inited.
-  inited = false,
+--------------------------------------------------------------------------------
+-- Patterns
+--------------------------------------------------------------------------------
 
-  -- The unique string prepended to all hash values. This is to ensure
-  -- that hash values do not accidentally coincide with an actual existing
-  -- string in the document.
-  identifier = "",
+local PATTERN_EMPTY = "^%s*$"
+local PATTERN_COMMENT = "^%s*<>"
+local PATTERN_HEADER = "^%s*(%#+)%s*(.*)%#*$"
+local PATTERN_RULE1 = "^%s?%s?%s?(-%s*-%s*-[%s-]*)$"
+local PATTERN_RULE2 = "^%s?%s?%s?(*%s**%s**[%s*]*)$"
+local PATTERN_RULE3 = "^%s?%s?%s?(_%s*_%s*_[%s_]*)$"
+local PATTERN_CODEBLOCK = "^%s*%`%`%`(.*)"
+local PATTERN_BLOCKQUOTE = "^%s*> (.*)$"
+local PATTERN_ULIST = "^%s*[%*%-] (.+)$"
+local PATTERN_OLIST = "^%s*%d+%. (.+)$"
+local PATTERN_LINKDEF = "^%s*%[(.*)%]%s*%:%s*(.*)"
 
-  -- Counter that counts up for each new hash instance.
-  counter = 0,
-
-  -- Hash table.
-  table = {},
+-- List of patterns
+local PATTERNS = {
+  PATTERN_EMPTY,
+  PATTERN_COMMENT,
+  PATTERN_HEADER,
+  PATTERN_RULE1,
+  PATTERN_RULE2,
+  PATTERN_RULE3,
+  PATTERN_CODEBLOCK,
+  PATTERN_BLOCKQUOTE,
+  PATTERN_ULIST,
+  PATTERN_OLIST,
+  PATTERN_LINKDEF,
 }
 
--- Inits hashing. Creates a hash_identifier that doesn't occur anywhere
--- in the text.
-local function init_hash(text)
-  HASH.inited = true
-  HASH.identifier = ""
-  HASH.counter = 0
-  HASH.table = {}
+local function isSpecialLine(line)
+  for i = 1, #PATTERNS do
+    if match(line, PATTERNS[i]) then
+      return PATTERNS[i]
+    end
+  end
+end
 
-  local s = "HASH"
-  local counter = 0
-  local id
+--------------------------------------------------------------------------------
+-- Simple Reading - Non Recursive
+--------------------------------------------------------------------------------
+
+local function readSimple(pop, peek, tree, links)
+  local line = peek()
+  if not line then
+    return
+  end
+
+  -- Test for Empty or Comment
+  if match(line, PATTERN_EMPTY) or match(line, PATTERN_COMMENT) then
+    return pop()
+  end
+
+  -- Test for Header
+  local m, rest = match(line, PATTERN_HEADER)
+  if m then
+    tree[#tree + 1] = {
+      lineRead(rest),
+      type = "h" .. #m,
+    }
+    tree[#tree + 1] = NEWLINE
+    return pop()
+  end
+
+  -- Test for Horizontal Rule
+  if match(line, PATTERN_RULE1) or match(line, PATTERN_RULE2) or match(line, PATTERN_RULE3) then
+    tree[#tree + 1] = { type = "hr", noclose = true }
+    tree[#tree + 1] = NEWLINE
+    return pop()
+  end
+
+  -- Test for Code Block
+  local syntax = match(line, PATTERN_CODEBLOCK)
+  if syntax then
+    local indent = getIndentLevel(line)
+    local code = {
+      type = "code",
+    }
+    if #syntax > 0 then
+      code.attributes = {
+        class = format("language-%s", lower(syntax)),
+      }
+    end
+    local pre = {
+      type = "pre",
+      [1] = code,
+    }
+    tree[#tree + 1] = pre
+    while not (match(pop(), PATTERN_CODEBLOCK) and getIndentLevel(peek()) == indent) do
+      code[#code + 1] = peek()
+      code[#code + 1] = "\r\n"
+    end
+    return pop()
+  end
+
+  -- Test for link definition
+  local linkname, location = match(line, PATTERN_LINKDEF)
+  if linkname then
+    links[lower(linkname)] = location
+    return pop()
+  end
+
+  -- Test for header type two
+  local nextLine = pop()
+  if nextLine and match(nextLine, "^%s*%=+$") then
+    tree[#tree + 1] = { lineRead(line), type = "h1" }
+    return pop()
+  elseif nextLine and match(nextLine, "^%s*%-+$") then
+    tree[#tree + 1] = { lineRead(line), type = "h2" }
+    return pop()
+  end
+
+  -- Do Paragraph
+  local p = {
+    lineRead(line),
+    NEWLINE,
+    type = "p",
+  }
+  tree[#tree + 1] = p
+  while nextLine and not isSpecialLine(nextLine) do
+    p[#p + 1] = lineRead(nextLine)
+    p[#p + 1] = NEWLINE
+    nextLine = pop()
+  end
+  p[#p] = nil
+  tree[#tree + 1] = NEWLINE
+  return peek()
+end
+
+--------------------------------------------------------------------------------
+-- Main Reading - Potentially Recursive
+--------------------------------------------------------------------------------
+
+local readLineStream
+
+local function readFragment(pop, peek, links, stop, ...)
+  local accum2 = {}
+  local line = peek()
+  local indent = getIndentLevel(line)
   while true do
-    id = s .. counter
-    if not text:find(id, 1, true) then
+    accum2[#accum2 + 1] = stripIndent(line, indent)
+    line = pop()
+    if not line then
       break
     end
-    counter = counter + 1
+    if stop(line, ...) then
+      break
+    end
   end
-  HASH.identifier = id
+  local tree = {}
+  readLineStream(tableLineStream(accum2), tree, links)
+  return tree
 end
 
--- Returns the hashed value for s.
-local function hash(s)
-  assert(HASH.inited)
-  if not HASH.table[s] then
-    HASH.counter = HASH.counter + 1
-    local id = HASH.identifier .. HASH.counter .. "X"
-    HASH.table[s] = id
+local function readBlockQuote(pop, peek, tree, links)
+  local line = peek()
+  if match(line, PATTERN_BLOCKQUOTE) then
+    local bq = readFragment(pop, peek, links, function(l)
+      local tp = isSpecialLine(l)
+      return tp and tp ~= PATTERN_BLOCKQUOTE
+    end)
+    bq.type = "blockquote"
+    tree[#tree + 1] = bq
+    return peek()
   end
-  return HASH.table[s]
 end
 
-----------------------------------------------------------------------
--- Protection
-----------------------------------------------------------------------
+local function readList(pop, peek, tree, links, expectedIndent)
+  if not peek() then
+    return
+  end
+  if expectedIndent and getIndentLevel(peek()) ~= expectedIndent then
+    return
+  end
+  local listPattern = (match(peek(), PATTERN_ULIST) and PATTERN_ULIST)
+    or (match(peek(), PATTERN_OLIST) and PATTERN_OLIST)
+  if not listPattern then
+    return
+  end
+  local lineType = listPattern
+  local line = peek()
+  local indent = getIndentLevel(line)
+  local list = {
+    type = (listPattern == PATTERN_ULIST and "ul" or "ol"),
+  }
+  tree[#tree + 1] = list
+  list[1] = NEWLINE
+  while lineType == listPattern do
+    list[#list + 1] = {
+      lineRead(match(line, lineType)),
+      type = "li",
+    }
+    line = pop()
+    if not line then
+      break
+    end
+    lineType = isSpecialLine(line)
+    if lineType ~= PATTERN_EMPTY then
+      list[#list + 1] = NEWLINE
+      local i = getIndentLevel(line)
+      if i < indent then
+        break
+      end
+      if i > indent then
+        local subtree = readFragment(pop, peek, links, function(l)
+          if not l then
+            return true
+          end
+          local tp = isSpecialLine(l)
+          return tp ~= PATTERN_EMPTY and getIndentLevel(l) < i
+        end)
+        list[#list + 1] = subtree
+        line = peek()
+        if not line then
+          break
+        end
+        lineType = isSpecialLine(line)
+      end
+    end
+  end
+  list[#list + 1] = NEWLINE
+  tree[#tree + 1] = NEWLINE
+  return peek()
+end
 
--- The protection module is used to "protect" parts of a document
--- so that they are not modified by subsequent processing steps.
--- Protected parts are saved in a table for later unprotection
+function readLineStream(stream, tree, links)
+  local pop, peek = bufferStream(stream)
+  tree = tree or {}
+  links = links or {}
+  while peek() do
+    if not readBlockQuote(pop, peek, tree, links) then
+      if not readList(pop, peek, tree, links) then
+        readSimple(pop, peek, tree, links)
+      end
+    end
+  end
+  return tree, links
+end
 
--- Protection data
-local PD = {
-  -- Saved blocks that have been converted
-  blocks = {},
+local function read(str) -- luacheck: no unused
+  return readLineStream(stringLineStream(str))
+end
 
-  -- Block level tags that will be protected
-  tags = {
-    "p",
-    "div",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "blockquote",
-    "pre",
-    "table",
-    "dl",
-    "ol",
-    "ul",
-    "script",
-    "noscript",
-    "form",
-    "fieldset",
-    "iframe",
-    "math",
-    "ins",
-    "del",
-  },
+--------------------------------------------------------------------------------
+-- Rendering
+--------------------------------------------------------------------------------
+
+local function renderAttributes(attributes)
+  local accum = {}
+  for k, v in pairs(attributes) do
+    accum[#accum + 1] = format('%s="%s"', k, v)
+  end
+  return concat(accum, " ")
+end
+
+local function renderTree(tree, links, accum)
+  if tree.type then
+    local attribs = tree.attributes or {}
+    if tree.type == "a" and not attribs.href then
+      attribs.href = links[lower(tree[1] or "")] or ""
+    end
+    if tree.type == "img" and not attribs.src then
+      attribs.src = links[lower(attribs.alt or "")] or ""
+    end
+    local attribstr = renderAttributes(attribs)
+    if #attribstr > 0 then
+      accum[#accum + 1] = format("<%s %s>", tree.type, attribstr)
+    else
+      accum[#accum + 1] = format("<%s>", tree.type)
+    end
+  end
+  for i = 1, #tree do
+    local line = tree[i]
+    if type(line) == "string" then
+      accum[#accum + 1] = line
+    elseif type(line) == "table" then
+      renderTree(line, links, accum)
+    else
+      error "Unexpected node while rendering tree."
+    end
+  end
+  if not tree.noclose and tree.type then
+    accum[#accum + 1] = format("</%s>", tree.type)
+  end
+end
+
+local function renderLinesRaw(stream, options)
+  local tree, links = readLineStream(stream)
+  local accum = {}
+  local head, tail, insertHead, insertTail, prependHead, appendTail = nil, nil, nil, nil, nil, nil
+  if options then
+    assert(type(options) == "table", "Options argument should be a table.")
+    if options.tag then
+      tail = format("</%s>", options.tag)
+      if options.attributes then
+        head = format("<%s %s>", options.tag, renderAttributes(options.attributes))
+      else
+        head = format("<%s>", options.tag)
+      end
+    end
+    insertHead = options.insertHead
+    insertTail = options.insertTail
+    prependHead = options.prependHead
+    appendTail = options.appendTail
+  end
+  accum[#accum + 1] = prependHead
+  accum[#accum + 1] = head
+  accum[#accum + 1] = insertHead
+  renderTree(tree, links, accum)
+  if accum[#accum] == NEWLINE then
+    accum[#accum] = nil
+  end
+  accum[#accum + 1] = insertTail
+  accum[#accum + 1] = tail
+  accum[#accum + 1] = appendTail
+  return concat(accum)
+end
+
+--------------------------------------------------------------------------------
+-- Module
+--------------------------------------------------------------------------------
+
+local function pwrap(...)
+  local status, value = pcall(...)
+  if status then
+    return value
+  else
+    return nil, value
+  end
+end
+
+local function renderLineIterator(stream, options)
+  return pwrap(renderLinesRaw, stream, options)
+end
+
+local function renderTable(t, options)
+  return pwrap(renderLinesRaw, tableLineStream(t), options)
+end
+
+local function renderString(str, options)
+  return pwrap(renderLinesRaw, stringLineStream(str), options)
+end
+
+local renderers = {
+  ["string"] = renderString,
+  ["table"] = renderTable,
+  ["function"] = renderLineIterator,
 }
 
--- Pattern for matching a block tag that begins and ends in the leftmost
--- column and may contain indented subtags, i.e.
--- <div>
---    A nested block.
---    <div>
---        Nested data.
---     </div>
--- </div>
-local function block_pattern(tag)
-  return "\n<" .. tag .. ".-\n</" .. tag .. ">[ \t]*\n"
+local function render(source, options)
+  local renderer = renderers[type(source)]
+  if not renderer then
+    return nil, "Source must be a string, table, or function."
+  end
+  return renderer(source, options)
 end
 
--- Pattern for matching a block tag that begins and ends with a newline
-local function line_pattern(tag)
-  return "\n<" .. tag .. ".-</" .. tag .. ">[ \t]*\n"
-end
-
--- Protects the range of characters from start to stop in the text and
--- returns the protected string.
-local function protect_range(text, start, stop)
-  local s = text:sub(start, stop)
-  local h = hash(s)
-  PD.blocks[h] = s
-  text = text:sub(1, start) .. h .. text:sub(stop)
-  return text
-end
-
--- Protect every part of the text that matches any of the patterns. The first
--- matching pattern is protected first, etc.
-local function protect_matches(text, patterns)
-  while true do
-    local start, stop = find_first(text, patterns)
-    if not start then
-      break
-    end
-    text = protect_range(text, start, stop)
-  end
-  return text
-end
-
--- Protects blocklevel tags in the specified text
-local function protect(text)
-  -- First protect potentially nested block tags
-  text = protect_matches(text, map(PD.tags, block_pattern))
-  -- Then protect block tags at the line level.
-  text = protect_matches(text, map(PD.tags, line_pattern))
-  -- Protect <hr> and comment tags
-  text = protect_matches(text, { "\n<hr[^>]->[ \t]*\n" })
-  text = protect_matches(text, { "\n<!%-%-.-%-%->[ \t]*\n" })
-  return text
-end
-
--- Returns true if the string s is a hash resulting from protection
-local function is_protected(s)
-  return PD.blocks[s]
-end
-
--- Unprotects the specified text by expanding all the nonces
-local function unprotect(text)
-  for k, v in pairs(PD.blocks) do
-    v = v:gsub("%%", "%%%%")
-    text = text:gsub(k, v)
-  end
-  return text
-end
-
-----------------------------------------------------------------------
--- Block transform
-----------------------------------------------------------------------
-
--- The block transform functions transform the text on the block level.
--- They work with the text as an array of lines rather than as individual
--- characters.
-
--- Returns true if the line is a ruler of (char) characters.
--- The line must contain at least three char characters and contain only spaces and
--- char characters.
-local function is_ruler_of(line, char)
-  if not line:match("^[ %" .. char .. "]*$") then
-    return false
-  end
-  if not line:match("%" .. char .. ".*%" .. char .. ".*%" .. char) then
-    return false
-  end
-  return true
-end
-
--- Identifies the block level formatting present in the line
-local function classify(line)
-  local info = { line = line, text = line }
-
-  if line:match "^    " then
-    info.type = "indented"
-    info.outdented = line:sub(5)
-    return info
-  end
-
-  for _, c in ipairs { "*", "-", "_", "=" } do
-    if is_ruler_of(line, c) then
-      info.type = "ruler"
-      info.ruler_char = c
-      return info
-    end
-  end
-
-  if line == "" then
-    info.type = "blank"
-    return info
-  end
-
-  if line:match "^(#+)[ \t]*(.-)[ \t]*#*[ \t]*$" then
-    local m1, m2 = line:match "^(#+)[ \t]*(.-)[ \t]*#*[ \t]*$"
-    info.type = "header"
-    info.level = m1:len()
-    info.text = m2
-    return info
-  end
-
-  if line:match "^ ? ? ?(%d+)%.[ \t]+(.+)" then
-    local number, text = line:match "^ ? ? ?(%d+)%.[ \t]+(.+)"
-    info.type = "list_item"
-    info.list_type = "numeric"
-    info.number = 0 + number
-    info.text = text
-    return info
-  end
-
-  if line:match "^ ? ? ?([%*%+%-])[ \t]+(.+)" then
-    local bullet, text = line:match "^ ? ? ?([%*%+%-])[ \t]+(.+)"
-    info.type = "list_item"
-    info.list_type = "bullet"
-    info.bullet = bullet
-    info.text = text
-    return info
-  end
-
-  if line:match "^>[ \t]?(.*)" then
-    info.type = "blockquote"
-    info.text = line:match "^>[ \t]?(.*)"
-    return info
-  end
-
-  if is_protected(line) then
-    info.type = "raw"
-    info.html = unprotect(line)
-    return info
-  end
-
-  info.type = "normal"
-  return info
-end
-
--- Find headers consisting of a normal line followed by a ruler and converts them to
--- header entries.
-local function headers(array)
-  local i = 1
-  while i <= #array - 1 do
-    if
-      array[i].type == "normal"
-      and array[i + 1].type == "ruler"
-      and (array[i + 1].ruler_char == "-" or array[i + 1].ruler_char == "=")
-    then
-      local info = { line = array[i].line }
-      info.text = info.line
-      info.type = "header"
-      info.level = iff(array[i + 1].ruler_char == "=", 1, 2)
-      table.remove(array, i + 1)
-      array[i] = info
-    end
-    i = i + 1
-  end
-  return array
-end
-
--- Forward declarations
-local block_transform, span_transform, encode_code
-
--- Convert lines to html code
-local function blocks_to_html(lines, no_paragraphs)
-  local out = {}
-  local i = 1
-  while i <= #lines do
-    local line = lines[i]
-    if line.type == "ruler" then
-      table.insert(out, "<hr/>")
-    elseif line.type == "raw" then
-      table.insert(out, line.html)
-    elseif line.type == "normal" then
-      local s = line.line
-
-      while i + 1 <= #lines and lines[i + 1].type == "normal" do
-        i = i + 1
-        s = s .. "\n" .. lines[i].line
-      end
-
-      if no_paragraphs then
-        table.insert(out, span_transform(s))
-      else
-        table.insert(out, "<p>" .. span_transform(s) .. "</p>")
-      end
-    elseif line.type == "header" then
-      local s = "<h" .. line.level .. ">" .. span_transform(line.text) .. "</h" .. line.level .. ">"
-      table.insert(out, s)
-    else
-      table.insert(out, line.line)
-    end
-    i = i + 1
-  end
-  return out
-end
-
--- Find list blocks and convert them to protected data blocks
-local function lists(array, sublist)
-  local function process_list(arr)
-    local function any_blanks(arr2)
-      for i = 1, #arr2 do
-        if arr2[i].type == "blank" then
-          return true
-        end
-      end
-      return false
-    end
-
-    local function split_list_items(arr2)
-      local acc = { arr2[1] }
-      local res = {}
-      for i = 2, #arr2 do
-        if arr2[i].type == "list_item" then
-          table.insert(res, acc)
-          acc = { arr2[i] }
-        else
-          table.insert(acc, arr2[i])
-        end
-      end
-      table.insert(res, acc)
-      return res
-    end
-
-    local function process_list_item(lines, block)
-      while lines[#lines].type == "blank" do
-        table.remove(lines)
-      end
-
-      local itemtext = lines[1].text
-      for i = 2, #lines do
-        itemtext = itemtext .. "\n" .. outdent(lines[i].line)
-      end
-      if block then
-        itemtext = block_transform(itemtext, true)
-        if not itemtext:find "<pre>" then
-          itemtext = indent(itemtext)
-        end
-        return "    <li>" .. itemtext .. "</li>"
-      else
-        local lines2 = split(itemtext)
-        lines2 = map(lines2, classify)
-        lines2 = lists(lines2, true)
-        lines2 = blocks_to_html(lines2, true)
-        itemtext = table.concat(lines2, "\n")
-        if not itemtext:find "<pre>" then
-          itemtext = indent(itemtext)
-        end
-        return "    <li>" .. itemtext .. "</li>"
-      end
-    end
-
-    local block_list = any_blanks(arr)
-    local items = split_list_items(arr)
-    local out = ""
-    for _, item in ipairs(items) do
-      out = out .. process_list_item(item, block_list) .. "\n"
-    end
-    if arr[1].list_type == "numeric" then
-      return "<ol>\n" .. out .. "</ol>"
-    else
-      return "<ul>\n" .. out .. "</ul>"
-    end
-  end
-
-  -- Finds the range of lines composing the first list in the array. A list
-  -- starts with (^ list_item) or (blank list_item) and ends with
-  -- (blank* $) or (blank normal).
-  --
-  -- A sublist can start with just (list_item) does not need a blank...
-  local function find_list(array2, sublist2)
-    local function find_list_start(array3, sublist3)
-      if array3[1].type == "list_item" then
-        return 1
-      end
-      if sublist3 then
-        for i = 1, #array3 do
-          if array3[i].type == "list_item" then
-            return i
-          end
-        end
-      else
-        for i = 1, #array3 - 1 do
-          if array3[i].type == "blank" and array3[i + 1].type == "list_item" then
-            return i + 1
-          end
-        end
-      end
-      return nil
-    end
-    local function find_list_end(array4, start)
-      local pos = #array4
-      for i = start, #array4 - 1 do
-        if
-          array4[i].type == "blank"
-          and array4[i + 1].type ~= "list_item"
-          and array4[i + 1].type ~= "indented"
-          and array4[i + 1].type ~= "blank"
-        then
-          pos = i - 1
-          break
-        end
-      end
-      while pos > start and array4[pos].type == "blank" do
-        pos = pos - 1
-      end
-      return pos
-    end
-
-    local start = find_list_start(array2, sublist2)
-    if not start then
-      return nil
-    end
-    return start, find_list_end(array2, start)
-  end
-
-  while true do
-    local start, stop = find_list(array, sublist)
-    if not start then
-      break
-    end
-    local text = process_list(splice(array, start, stop))
-    local info = {
-      line = text,
-      type = "raw",
-      html = text,
-    }
-    array = splice(array, start, stop, { info })
-  end
-
-  -- Convert any remaining list items to normal
-  for _, line in ipairs(array) do
-    if line.type == "list_item" then
-      line.type = "normal"
-    end
-  end
-
-  return array
-end
-
--- Find and convert blockquote markers.
-local function blockquotes(lines)
-  local function find_blockquote(lines4)
-    local start
-    for i, line in ipairs(lines4) do
-      if line.type == "blockquote" then
-        start = i
-        break
-      end
-    end
-    if not start then
-      return nil
-    end
-
-    local stop = #lines4
-    for i = start + 1, #lines4 do
-      if lines4[i].type == "blank" or lines4[i].type == "blockquote" then
-      elseif lines4[i].type == "normal" then
-        if lines4[i - 1].type == "blank" then
-          stop = i - 1
-          break
-        end
-      else
-        stop = i - 1
-        break
-      end
-    end
-    while lines4[stop].type == "blank" do
-      stop = stop - 1
-    end
-    return start, stop
-  end
-
-  local function process_blockquote(lines3)
-    local raw = lines3[1].text
-    for i = 2, #lines3 do
-      raw = raw .. "\n" .. lines3[i].text
-    end
-    local bt = block_transform(raw)
-    if not bt:find "<pre>" then
-      bt = indent(bt)
-    end
-    return "<blockquote>\n    " .. bt .. "\n</blockquote>"
-  end
-
-  while true do
-    local start, stop = find_blockquote(lines)
-    if not start then
-      break
-    end
-    local text = process_blockquote(splice(lines, start, stop))
-    local info = {
-      line = text,
-      type = "raw",
-      html = text,
-    }
-    lines = splice(lines, start, stop, { info })
-  end
-  return lines
-end
-
--- Find and convert codeblocks.
-local function codeblocks(lines)
-  local function find_codeblock(lines5)
-    local start
-    for i, line in ipairs(lines5) do
-      if line.type == "indented" then
-        start = i
-        break
-      end
-    end
-    if not start then
-      return nil
-    end
-
-    local stop = #lines5
-    for i = start + 1, #lines5 do
-      if lines5[i].type ~= "indented" and lines5[i].type ~= "blank" then
-        stop = i - 1
-        break
-      end
-    end
-    while lines5[stop].type == "blank" do
-      stop = stop - 1
-    end
-    return start, stop
-  end
-
-  local function process_codeblock(lines6)
-    local raw = detab(encode_code(outdent(lines6[1].line)))
-    for i = 2, #lines6 do
-      raw = raw .. "\n" .. detab(encode_code(outdent(lines6[i].line)))
-    end
-    return "<pre><code>" .. raw .. "\n</code></pre>"
-  end
-
-  while true do
-    local start, stop = find_codeblock(lines)
-    if not start then
-      break
-    end
-    local text = process_codeblock(splice(lines, start, stop))
-    local info = {
-      line = text,
-      type = "raw",
-      html = text,
-    }
-    lines = splice(lines, start, stop, { info })
-  end
-  return lines
-end
-
--- Perform all the block level transforms
-function block_transform(text, sublist)
-  local lines = split(text)
-  lines = map(lines, classify)
-  lines = headers(lines)
-  lines = lists(lines, sublist)
-  lines = codeblocks(lines)
-  lines = blockquotes(lines)
-  lines = blocks_to_html(lines)
-  local text1 = table.concat(lines, "\n")
-  return text1
-end
-
-----------------------------------------------------------------------
--- Span transform
-----------------------------------------------------------------------
-
--- Functions for transforming the text at the span level.
-
--- These characters may need to be escaped because they have a special
--- meaning in markdown.
-local escape_chars = "'\\`*_{}[]()>#+-.!'"
-local escape_table = {}
-
-local function init_escape_table()
-  escape_table = {}
-  for i = 1, #escape_chars do
-    local c = escape_chars:sub(i, i)
-    escape_table[c] = hash(c)
-  end
-end
-
--- Adds a new escape to the escape table.
-local function add_escape(text)
-  if not escape_table[text] then
-    escape_table[text] = hash(text)
-  end
-  return escape_table[text]
-end
-
--- Encode backspace-escaped characters in the markdown source.
-local function encode_backslash_escapes(t)
-  for i = 1, escape_chars:len() do
-    local c = escape_chars:sub(i, i)
-    t = t:gsub("\\%" .. c, escape_table[c])
-  end
-  return t
-end
-
--- Escape characters that should not be disturbed by markdown.
-local function escape_special_chars(text)
-  local tokens = tokenize_html(text)
-
-  local out = ""
-  for _, token in ipairs(tokens) do
-    local t = token.text
-    if token.type == "tag" then
-      -- In tags, encode * and _ so they don't conflict with their use in markdown.
-      t = t:gsub("%*", escape_table["*"])
-      t = t:gsub("%_", escape_table["_"])
-    else
-      t = encode_backslash_escapes(t)
-    end
-    out = out .. t
-  end
-  return out
-end
-
--- Unescape characters that have been encoded.
-local function unescape_special_chars(t)
-  local tin = t
-  for k, v in pairs(escape_table) do
-    k = k:gsub("%%", "%%%%")
-    t = t:gsub(v, k)
-  end
-  if t ~= tin then
-    t = unescape_special_chars(t)
-  end
-  return t
-end
-
--- Encode/escape certain characters inside Markdown code runs.
--- The point is that in code, these characters are literals,
--- and lose their special Markdown meanings.
-function encode_code(s)
-  s = s:gsub("%&", "&amp;")
-  s = s:gsub("<", "&lt;")
-  s = s:gsub(">", "&gt;")
-  for k, v in pairs(escape_table) do
-    s = s:gsub("%" .. k, v)
-  end
-  return s
-end
-
--- Handle backtick blocks.
-local function code_spans(s)
-  s = s:gsub("\\\\", escape_table["\\"])
-  s = s:gsub("\\`", escape_table["`"])
-
-  local pos = 1
-  while true do
-    local start, stop = s:find("`+", pos)
-    if not start then
-      return s
-    end
-    local count = stop - start + 1
-    -- Find a matching number of backticks
-    local estart, estop = s:find(string.rep("`", count), stop + 1)
-    local brstart = s:find("\n", stop + 1)
-    if estart and (not brstart or estart < brstart) then
-      local code = s:sub(stop + 1, estart - 1)
-      code = code:gsub("^[ \t]+", "")
-      code = code:gsub("[ \t]+$", "")
-      code = code:gsub(escape_table["\\"], escape_table["\\"] .. escape_table["\\"])
-      code = code:gsub(escape_table["`"], escape_table["\\"] .. escape_table["`"])
-      code = "<code>" .. encode_code(code) .. "</code>"
-      code = add_escape(code)
-      s = s:sub(1, start - 1) .. code .. s:sub(estop + 1)
-      pos = start + code:len()
-    else
-      pos = stop + 1
-    end
-  end
-end
-
--- Encode alt text... enodes &, and ".
-local function encode_alt(s)
-  if not s then
-    return s
-  end
-  s = s:gsub("&", "&amp;")
-  s = s:gsub('"', "&quot;")
-  s = s:gsub("<", "&lt;")
-  return s
-end
-
--- Forward declaration for link_db as returned by strip_link_definitions.
-local link_database
-
--- Handle image references
-local function images(text)
-  local function reference_link(alt, id)
-    alt = encode_alt(alt:match("%b[]"):sub(2, -2))
-    id = id:match("%[(.*)%]"):lower()
-    if id == "" then
-      id = text:lower()
-    end
-    link_database[id] = link_database[id] or {}
-    if not link_database[id].url then
-      return nil
-    end
-    local url = link_database[id].url or id
-    url = encode_alt(url)
-    local title = encode_alt(link_database[id].title)
-    if title then
-      title = ' title="' .. title .. '"'
-    else
-      title = ""
-    end
-    return add_escape('<img src="' .. url .. '" alt="' .. alt .. '"' .. title .. "/>")
-  end
-
-  local function inline_link(alt, link)
-    alt = encode_alt(alt:match("%b[]"):sub(2, -2))
-    local url, title = link:match "%(<?(.-)>?[ \t]*['\"](.+)['\"]"
-    url = url or link:match "%(<?(.-)>?%)"
-    url = encode_alt(url)
-    title = encode_alt(title)
-    if title then
-      return add_escape('<img src="' .. url .. '" alt="' .. alt .. '" title="' .. title .. '"/>')
-    else
-      return add_escape('<img src="' .. url .. '" alt="' .. alt .. '"/>')
-    end
-  end
-
-  text = text:gsub("!(%b[])[ \t]*\n?[ \t]*(%b[])", reference_link)
-  text = text:gsub("!(%b[])(%b())", inline_link)
-  return text
-end
-
--- Handle anchor references
-local function anchors(text)
-  local function reference_link(text4, id)
-    text4 = text4:match("%b[]"):sub(2, -2)
-    id = id:match("%b[]"):sub(2, -2):lower()
-    if id == "" then
-      id = text4:lower()
-    end
-    link_database[id] = link_database[id] or {}
-    if not link_database[id].url then
-      return nil
-    end
-    local url = link_database[id].url or id
-    url = encode_alt(url)
-    local title = encode_alt(link_database[id].title)
-    if title then
-      title = ' title="' .. title .. '"'
-    else
-      title = ""
-    end
-    return add_escape('<a href="' .. url .. '"' .. title .. ">") .. text4 .. add_escape "</a>"
-  end
-
-  local function inline_link(text5, link)
-    text5 = text5:match("%b[]"):sub(2, -2)
-    local url, title = link:match "%(<?(.-)>?[ \t]*['\"](.+)['\"]"
-    title = encode_alt(title)
-    url = url or link:match "%(<?(.-)>?%)" or ""
-    url = encode_alt(url)
-    if title then
-      return add_escape('<a href="' .. url .. '" title="' .. title .. '">') .. text5 .. "</a>"
-    else
-      return add_escape('<a href="' .. url .. '">') .. text5 .. add_escape "</a>"
-    end
-  end
-
-  text = text:gsub("(%b[])[ \t]*\n?[ \t]*(%b[])", reference_link)
-  text = text:gsub("(%b[])(%b())", inline_link)
-  return text
-end
-
--- Handle auto links, i.e. <http://www.google.com/>.
-local function auto_links(text)
-  local function link(s)
-    return add_escape('<a href="' .. s .. '">') .. s .. "</a>"
-  end
-  -- Encode chars as a mix of dec and hex entities to (perhaps) fool
-  -- spambots.
-  local function encode_email_address(s)
-    -- Use a deterministic encoding to make unit testing possible.
-    -- Code 45% hex, 45% dec, 10% plain.
-    local hex = {
-      code = function(c)
-        return "&#x" .. string.format("%x", c:byte()) .. ";"
-      end,
-      count = 1,
-      rate = 0.45,
-    }
-    local dec = {
-      code = function(c)
-        return "&#" .. c:byte() .. ";"
-      end,
-      count = 0,
-      rate = 0.45,
-    }
-    local plain = {
-      code = function(c)
-        return c
-      end,
-      count = 0,
-      rate = 0.1,
-    }
-    local codes = { hex, dec, plain }
-    local function swap(t, k1, k2)
-      local temp = t[k2]
-      t[k2] = t[k1]
-      t[k1] = temp
-    end
-
-    local out = ""
-    for i = 1, s:len() do
-      for _, code in ipairs(codes) do
-        code.count = code.count + code.rate
-      end
-      if codes[1].count < codes[2].count then
-        swap(codes, 1, 2)
-      end
-      if codes[2].count < codes[3].count then
-        swap(codes, 2, 3)
-      end
-      if codes[1].count < codes[2].count then
-        swap(codes, 1, 2)
-      end
-
-      local code = codes[1]
-      local c = s:sub(i, i)
-      -- Force encoding of "@" to make email address more invisible.
-      if c == "@" and code == plain then
-        code = codes[2]
-      end
-      out = out .. code.code(c)
-      code.count = code.count - 1
-    end
-    return out
-  end
-  local function mail(s)
-    s = unescape_special_chars(s)
-    local address = encode_email_address("mailto:" .. s)
-    local text2 = encode_email_address(s)
-    return add_escape('<a href="' .. address .. '">') .. text2 .. "</a>"
-  end
-  -- links
-  text = text:gsub("<(https?:[^'\">%s]+)>", link)
-  text = text:gsub("<(ftp:[^'\">%s]+)>", link)
-
-  -- mail
-  text = text:gsub("<mailto:([^'\">%s]+)>", mail)
-  text = text:gsub("<([-.%w]+%@[-.%w]+)>", mail)
-  return text
-end
-
--- Encode free standing amps (&) and angles (<)... note that this does not
--- encode free >.
-local function amps_and_angles(s)
-  -- encode amps not part of &..; expression
-  local pos = 1
-  while true do
-    local amp = s:find("&", pos)
-    if not amp then
-      break
-    end
-    local semi = s:find(";", amp + 1)
-    local stop = s:find("[ \t\n&]", amp + 1)
-    if not semi or (stop and stop < semi) or (semi - amp) > 15 then
-      s = s:sub(1, amp - 1) .. "&amp;" .. s:sub(amp + 1)
-      pos = amp + 1
-    else
-      pos = amp + 1
-    end
-  end
-
-  -- encode naked <'s
-  s = s:gsub("<([^a-zA-Z/?$!])", "&lt;%1")
-  s = s:gsub("<$", "&lt;")
-
-  -- what about >, nothing done in the original markdown source to handle them
-  return s
-end
-
--- Handles emphasis markers (* and _) in the text.
-local function emphasis(text)
-  for _, s in ipairs { "%*%*", "%_%_" } do
-    text = text:gsub(s .. "([^%s][%*%_]?)" .. s, "<strong>%1</strong>")
-    text = text:gsub(s .. "([^%s][^<>]-[^%s][%*%_]?)" .. s, "<strong>%1</strong>")
-  end
-  for _, s in ipairs { "%*", "%_" } do
-    text = text:gsub(s .. "([^%s_])" .. s, "<em>%1</em>")
-    text = text:gsub(s .. "(<strong>[^%s_]</strong>)" .. s, "<em>%1</em>")
-    text = text:gsub(s .. "([^%s_][^<>_]-[^%s_])" .. s, "<em>%1</em>")
-    text = text:gsub(s .. "([^<>_]-<strong>[^<>_]-</strong>[^<>_]-)" .. s, "<em>%1</em>")
-  end
-  return text
-end
-
--- Handles line break markers in the text.
-local function line_breaks(text)
-  return text:gsub("  +\n", " <br/>\n")
-end
-
--- Perform all span level transforms.
-function span_transform(text)
-  text = code_spans(text)
-  text = escape_special_chars(text)
-  text = images(text)
-  text = anchors(text)
-  text = auto_links(text)
-  text = amps_and_angles(text)
-  text = emphasis(text)
-  text = line_breaks(text)
-  return text
-end
-
-----------------------------------------------------------------------
--- Markdown
-----------------------------------------------------------------------
-
--- Cleanup the text by normalizing some possible variations to make further
--- processing easier.
-local function cleanup(text)
-  -- Standardize line endings
-  text = text:gsub("\r\n", "\n") -- DOS to UNIX
-  text = text:gsub("\r", "\n") -- Mac to UNIX
-
-  -- Convert all tabs to spaces
-  text = detab(text)
-
-  -- Strip lines with only spaces and tabs
-  while true do
-    local subs
-    text, subs = text:gsub("\n[ \t]+\n", "\n\n")
-    if subs == 0 then
-      break
-    end
-  end
-
-  return "\n" .. text .. "\n"
-end
-
--- Strips link definitions from the text and stores the data in a lookup table.
-local function strip_link_definitions(text)
-  local linkdb = {}
-
-  local function link_def(id, url, title)
-    id = id:match("%[(.+)%]"):lower()
-    linkdb[id] = linkdb[id] or {}
-    linkdb[id].url = url or linkdb[id].url
-    linkdb[id].title = title or linkdb[id].title
-    return ""
-  end
-
-  local def_no_title = "\n ? ? ?(%b[]):[ \t]*\n?[ \t]*<?([^%s>]+)>?[ \t]*"
-  local def_title1 = def_no_title .. "[ \t]+\n?[ \t]*[\"'(]([^\n]+)[\"')][ \t]*"
-  local def_title2 = def_no_title .. "[ \t]*\n[ \t]*[\"'(]([^\n]+)[\"')][ \t]*"
-  local def_title3 = def_no_title .. "[ \t]*\n?[ \t]+[\"'(]([^\n]+)[\"')][ \t]*"
-
-  text = text:gsub(def_title1, link_def)
-  text = text:gsub(def_title2, link_def)
-  text = text:gsub(def_title3, link_def)
-  text = text:gsub(def_no_title, link_def)
-  return text, linkdb
-end
-
--- Main markdown processing function
-local function markdown(text)
-  init_hash(text)
-  init_escape_table()
-
-  text = cleanup(text)
-  text = protect(text)
-  text, link_database = strip_link_definitions(text)
-  text = block_transform(text)
-  text = unescape_special_chars(text)
-  return text
-end
-
-----------------------------------------------------------------------
--- End of module
-----------------------------------------------------------------------
-
--- Class for parsing command-line options
-local OptionParser = {}
-OptionParser.__index = OptionParser
-
--- Creates a new option parser
-function OptionParser:new()
-  local o = { short = {}, long = {} }
-  setmetatable(o, self)
-  return o
-end
-
--- Calls f() whenever a flag with specified short and long name is encountered
-function OptionParser:flag(short, long, f)
-  local info = { type = "flag", f = f }
-  if short then
-    self.short[short] = info
-  end
-  if long then
-    self.long[long] = info
-  end
-end
-
--- Calls f(param) whenever a parameter flag with specified short and long name is encountered
-function OptionParser:param(short, long, f)
-  local info = { type = "param", f = f }
-  if short then
-    self.short[short] = info
-  end
-  if long then
-    self.long[long] = info
-  end
-end
-
--- Calls f(v) for each non-flag argument
-function OptionParser:arg(f)
-  self.arg = f
-end
-
--- Runs the option parser for the specified set of arguments. Returns true if all arguments
--- where successfully parsed and false otherwise.
-function OptionParser:run(args)
-  local pos = 1
-  while pos <= #args do
-    local arg = args[pos]
-    if arg == "--" then
-      for i = pos + 1, #args do
-        if self.arg then
-          self.arg(args[i])
-        end
-        return true
-      end
-    end
-    if arg:match "^%-%-" then
-      local info = self.long[arg:sub(3)]
-      if not info then
-        print("Unknown flag: " .. arg)
-        return false
-      end
-      if info.type == "flag" then
-        info.f()
-        pos = pos + 1
-      else
-        local param = args[pos + 1]
-        if not param then
-          print("No parameter for flag: " .. arg)
-          return false
-        end
-        info.f(param)
-        pos = pos + 2
-      end
-    elseif arg:match "^%-" then
-      for i = 2, arg:len() do
-        local c = arg:sub(i, i)
-        local info = self.short[c]
-        if not info then
-          print("Unknown flag: -" .. c)
-          return false
-        end
-        if info.type == "flag" then
-          info.f()
-        else
-          if i == arg:len() then
-            local param = args[pos + 1]
-            if not param then
-              print("No parameter for flag: -" .. c)
-              return false
-            end
-            info.f(param)
-            pos = pos + 1
-          else
-            local param = arg:sub(i + 1)
-            info.f(param)
-          end
-          break
-        end
-      end
-      pos = pos + 1
-    else
-      if self.arg then
-        self.arg(arg)
-      end
-      pos = pos + 1
-    end
-  end
-  return true
-end
-
-return {
-  markdown = function(text)
-    -- it adds some symbol at the start and at the end of a output
-    -- that's the simplest way to deal with it
-    return markdown(text):sub(2, -2)
+return setmetatable({
+  render = render,
+  renderString = renderString,
+  renderLineIterator = renderLineIterator,
+  renderTable = renderTable,
+}, {
+  __call = function(_, ...)
+    return render(...)
   end,
-}
+})

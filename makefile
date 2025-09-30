@@ -1,5 +1,4 @@
-.SILENT:
-.PHONY:
+.PHONY: all build test
 
 CMD=nvim --clean --headless -u ./minit.lua
 
