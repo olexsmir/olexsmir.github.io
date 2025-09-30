@@ -123,6 +123,17 @@ function html.ul(attributes, children) return html.el("ul", attributes, children
 ---@param children site.HtmlNote[]
 function html.li(attributes, children) return html.el("li", attributes, children) end
 
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.title(attributes, children) return html.el("title", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+function html.link(attributes) return html.el("link", attributes, {}) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.h1(attributes, children) return html.el("h1", attributes, children) end
+
 -- stylua: ignore end
 
 return html

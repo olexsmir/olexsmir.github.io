@@ -1,5 +1,5 @@
 local h = require "site.html"
-local date = require("site.date").date
+local formatDate = require("site.date").date
 local a = require "site.html.attribute"
 local rss = {}
 
@@ -29,10 +29,10 @@ function rss.rss(posts, config)
     ---@param post site.Post
     :map(function(post)
       return h.el("entry", {}, {
-        h.el("title", {}, { h.text(post.meta.title) }),
-        h.el("link", { a.href(config.home_url .. "/" .. post.meta.slug) }, {}),
+        h.title({}, { h.text(post.meta.title) }),
+        h.link { a.href(config.home_url .. "/" .. post.meta.slug) },
         h.el("id", {}, { h.text(config.home_url .. "/" .. post.meta.slug) }),
-        h.el("updated", {}, { h.text(date(post.meta.date)) }),
+        h.el("updated", {}, { h.text(formatDate(post.meta.date)) }),
         h.el("content", { a.attr("type", "html") }, { h.raw(rss.escape_html(post.content)) }),
       })
     end)
@@ -40,16 +40,16 @@ function rss.rss(posts, config)
 
   return [[<?xml version="1.0" encoding="utf-8"?>]]
     .. h.render(h.el("feed", { a.attr("xmlns", "http://www.w3.org/2005/Atom") }, {
-      h.el("title", {}, { h.text(config.title) }),
+      h.title({}, { h.text(config.title) }),
       h.el("subtitle", {}, { h.text "olexsmir's blog feed" }),
       h.el("id", {}, { h.text(config.home_url .. "/") }),
-      h.el("link", { a.href(config.home_url), a.attr("rel", "alternate") }, {}),
-      h.el("link", {
+      h.link { a.href(config.home_url), a.attr("rel", "alternate") },
+      h.link {
         a.href(config.feed_url),
         a.attr("rel", "self"),
         a.attr("type", "application/atom+xml"),
-      }, {}),
-      h.el("updated", {}, { h.text(date(posts[1].meta.date)) }),
+      },
+      h.el("updated", {}, { h.text(formatDate(posts[1].meta.date)) }),
       h.el("author", {}, {
         h.el("name", {}, { h.text(config.name) }),
         h.el("email", {}, { h.text(config.email) }),

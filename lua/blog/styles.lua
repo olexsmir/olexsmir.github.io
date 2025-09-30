@@ -42,22 +42,22 @@ return {
   },
 
   ["h1, h2, h3, h4, h5, h6"] = {
-    ["font-family"] = "var(--font-main)",
+    font_family = "var(--font-main)",
     color = "var(--heading-color)",
   },
 
   a = {
     color = "var(--link-color)",
     cursor = "pointer",
-    ["text-decoration"] = "none",
+    text_decoration = "none",
 
     ["&:hover"] = { text_decoration = "underline" },
   },
 
-  main = { ["line-height"] = "1.6" },
-  table = { ["width"] = "100%" },
+  main = { line_height = "1.6" },
+  table = { width = "100%" },
   img = { max_width = "100%" },
-  ["nav a"] = { ["margin-right"] = "8px" },
+  ["nav a"] = { margin_right = "8px" },
   ["strong, b"] = { color = "var(--heading-color)" },
   [".inline"] = { width = "auto !important" },
 
@@ -98,8 +98,12 @@ return {
   },
 
   [".title"] = {
-    ["&:hover"] = { ["text-decoration"] = "none" },
-    ["&h1"] = { ["font-size"] = "1.5em" },
+    h1 = {
+      font_size = "1.5em",
+    },
+    [":hover"] = {
+      text_decoration = "none",
+    },
   },
 
   [".highlight, .code"] = {
@@ -114,7 +118,7 @@ return {
 
   ul = {
     ["&.blog-posts"] = {
-      ["list-style-type"] = "none",
+      list_style_type = "none",
       padding = "unset",
     },
     ["&.blog-posts li"] = { display = "flex" },
