@@ -11,6 +11,10 @@ function rss.escape_html(html)
     ['"'] = "&quot;",
     ["'"] = "&#39;",
   }
+  -- Remove or replace problematic characters
+  html = html:gsub("[\r\n\t]", " ") -- Convert whitespace to spaces
+  html = html:gsub("[%z\1-\8\11-\12\14-\31]", "") -- Remove control chars
+
   return (html:gsub("[&<>\"']", function(c)
     return map[c]
   end))
