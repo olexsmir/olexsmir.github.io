@@ -1,9 +1,9 @@
 .PHONY: all build test
 
-CMD=nvim --clean --headless -u ./minit.lua
+CMD=nvim --clean -u ./scripts/minit.lua
 
 test:
-	$(CMD) -c "lua MiniTest.run()"
+	$(CMD) --headless -c "lua MiniTest.run()"
 
 build:
-	nvim --clean -u ./minit.lua -l build.lua
+	$(CMD) -l ./scripts/build.lua

@@ -1,6 +1,6 @@
 local function root(p)
   local f = debug.getinfo(1, "S").source:sub(2)
-  return vim.fn.fnamemodify(f, ":p:h") .. "/" .. (p or "")
+  return vim.fn.fnamemodify(f, ":p:h:h") .. "/" .. (p or "")
 end
 
 local function install_plug(plugin)
