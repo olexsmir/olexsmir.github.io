@@ -25,7 +25,20 @@ end
 
 ---@param path string
 function file.mkdir(path)
-  vim.fn.mkdir(path)
+  vim.fn.mkdir(path, "p")
+end
+
+---@param fpath string
+function file.is_dir(fpath)
+  local build_dir_stats = vim.uv.fs_stat(fpath)
+  return not build_dir_stats or build_dir_stats.type == "directory"
+end
+
+function file.copy(from, to)
+  file.mkdir(to)
+  for _, f in ipairs(vim.fn.readdir(from)) do
+    vim.uv.fs_copyfile(vim.fs.joinpath(from, f), vim.fs.joinpath(to, f))
+  end
 end
 
 return file

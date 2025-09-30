@@ -10,16 +10,19 @@ local blog = {}
 
 local site_url = "https://olexsmir.github.io"
 local output_dir = "build"
+local assets_dir = "assets"
 local posts_dir = "posts"
 
 local function prepare()
-  local build_dir_stats = vim.uv.fs_stat(output_dir)
-  if not build_dir_stats or build_dir_stats.type == "directory" then
+  if file.is_dir(output_dir) then
     vim.print("deleting " .. output_dir)
     file.rm(output_dir)
   end
   vim.print("mkdir-ing " .. output_dir)
   file.mkdir(output_dir)
+
+  vim.print("copying " .. assets_dir)
+  file.copy(assets_dir, vim.fs.joinpath(output_dir, assets_dir))
 end
 
 local function write(fpath, data)
