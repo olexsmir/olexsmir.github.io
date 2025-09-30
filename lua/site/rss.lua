@@ -1,6 +1,6 @@
 local h = require "site.html"
-local formatDate = require("site.date").date
 local a = require "site.html.attribute"
+local formatDate = require("site.date").date
 local rss = {}
 
 function rss.escape_html(html)

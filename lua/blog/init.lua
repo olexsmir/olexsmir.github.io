@@ -3,6 +3,7 @@ local post = require "site.post"
 local file = require "site.file"
 local rss = require "site.rss"
 local css = require "site.css"
+local sitemap = require "site.sitemap"
 
 local pages = require "blog.pages"
 local styles = require "blog.styles"
@@ -61,6 +62,7 @@ function blog.build()
     home_url = site_url,
   }))
 
+  write("sitemap.xml", sitemap.sitemap(posts, { site_url = site_url }))
   write("style.css", css.style(styles))
   write_page("404.html", pages.not_found())
   write_page("index.html", pages.home(recent_posts))
