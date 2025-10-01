@@ -50,16 +50,15 @@ end
 
 local function header()
   return h.el("header", {}, {
-    h.a({ a.class "title", a.href "/" }, {
-      h.h1({}, { h.text "olexsmir's blog" }),
-    }),
     h.el("nav", {}, {
       h.p({}, {
-        h.a({ a.href "/" }, { h.text "home" }),
         h.a({ a.href "/posts" }, { h.text "posts" }),
         h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
         h.a({ a.href "/feed.xml" }, { h.text "rss" }),
       }),
+    }),
+    h.a({ a.class "title", a.href "/" }, {
+      h.h1({}, { h.text "olexsmir's blog" }),
     }),
   })
 end
@@ -98,7 +97,7 @@ function pages.home(recent_posts)
 end
 
 function pages.posts(posts)
-  return with_body("posts", "list of all my posts", {
+  return with_body("posts", "List of all my blog posts", {
     header(),
     h.main({}, {
       h.ul({ a.class "blog-posts" }, list_posts(posts)),
@@ -109,11 +108,13 @@ end
 ---@param post site.Post
 ---@return site.HtmlNote
 function pages.post(post)
-  return with_body(post.meta.title, "", {
+  return with_body(post.meta.title, post.meta.desc, {
     header(),
     h.main({}, {
       h.h1({}, { h.text(post.meta.title) }),
-      h.p({}, { h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }) }),
+      h.p({}, {
+        h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
+      }),
       h.raw(post.content),
     }),
   })

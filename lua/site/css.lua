@@ -68,13 +68,13 @@ end
 function css.style(rules)
   local all_rules = flatten_css_rules(rules)
 
-  local rule_parts = {}
   local selectors = {}
   for s in pairs(all_rules) do
     table.insert(selectors, s)
   end
   table.sort(selectors)
 
+  local rule_parts = {}
   for _, sel in ipairs(selectors) do
     local props = all_rules[sel]
     local props_str = render_properties(props) .. ";"

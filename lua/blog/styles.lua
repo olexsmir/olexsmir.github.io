@@ -27,6 +27,7 @@ return {
     },
   },
 
+  header = { padding_bottom = "0.3rem" },
   body = {
     font_family = "var(--font-secondary)",
     font_size = "var(--font-scale)",
