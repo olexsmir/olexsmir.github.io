@@ -7,3 +7,7 @@ test:
 
 build:
 	$(CMD) -l ./scripts/build.lua
+
+dev:
+	@watchexec --watch posts --watch lua --exts lua,md -- "make build" &
+	@bunx http-server ./build -p 8080
