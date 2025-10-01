@@ -7,7 +7,6 @@ function file.list_dir(dir_path)
 end
 
 ---@param fpath string
----@return string[]
 function file.read(fpath)
   return vim.fn.readfile(fpath)
 end
@@ -34,7 +33,9 @@ function file.is_dir(fpath)
   return not build_dir_stats or build_dir_stats.type == "directory"
 end
 
-function file.copy(from, to)
+---@param from string
+---@param to string
+function file.copy_dir(from, to)
   file.mkdir(to)
   for _, f in ipairs(vim.fn.readdir(from)) do
     vim.uv.fs_copyfile(vim.fs.joinpath(from, f), vim.fs.joinpath(to, f))

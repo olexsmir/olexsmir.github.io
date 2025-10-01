@@ -1,13 +1,14 @@
-local h = require "site.html"
 local a = require "site.html.attribute"
 local formatDate = require("site.date").date
+local h = require "site.html"
 local sitemap = {}
 
-local function url(url_, date, priority)
+---@param opts {url:string, date:string, priority: string}
+local function url(opts)
   return h.el("url", {}, {
-    h.el("loc", {}, { h.text(url_) }),
-    h.el("lastmod", {}, { h.text(formatDate(date)) }),
-    h.el("priority", {}, { h.text(priority) }),
+    h.el("loc", {}, { h.text(opts.url) }),
+    h.el("lastmod", {}, { h.text(formatDate(opts.date)) }),
+    h.el("priority", {}, { h.text(opts.priority) }),
   })
 end
 
@@ -19,16 +20,25 @@ function sitemap.sitemap(posts, config)
     .iter(posts)
     ---@param post site.Post
     :map(function(post)
-      return url(config.site_url .. "/" .. post.meta.slug, post.meta.date, "0.80")
+      return url {
+        url = config.site_url .. "/" .. post.meta.slug,
+        date = post.meta.date,
+        priority = "0.80",
+      }
     end)
     :totable()
 
-  return h.render(
-    h.el("urlset", { a.attr("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9") }, {
-      url(config.site_url, posts[1].meta.date, "1.0"),
-      unpack(urls),
-    })
-  )
+  return h.render(h.el("urlset", {
+    a.attr("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9"),
+    a.attr("xmlns:xhtml", "http://www.w3.org/1999/xhtml"),
+  }, {
+    url {
+      url = config.site_url,
+      date = posts[1].meta.date,
+      priority = "1.0",
+    },
+    unpack(urls),
+  }))
 end
 
 return sitemap

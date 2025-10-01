@@ -3,8 +3,8 @@ local html = {}
 ---@class site.HtmlNote
 ---@field tag string
 ---@field text? string
----@field attributes? site.HtmlAttribute[]
----@field children? site.HtmlNote[]
+---@field attributes site.HtmlAttribute[]
+---@field children site.HtmlNote[]
 
 ---@param tag string
 ---@param attributes site.HtmlAttribute[]
@@ -133,6 +133,10 @@ function html.link(attributes) return html.el("link", attributes, {}) end
 ---@param attributes site.HtmlAttribute[]
 ---@param children site.HtmlNote[]
 function html.h1(attributes, children) return html.el("h1", attributes, children) end
+
+---@param attributes site.HtmlAttribute[]
+---@param children site.HtmlNote[]
+function html.nav(attributes, children) return html.el("nav", attributes, children) end
 
 -- stylua: ignore end
 

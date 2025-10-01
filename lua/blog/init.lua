@@ -1,33 +1,30 @@
+local css = require "site.css"
+local file = require "site.file"
 local html = require "site.html"
 local post = require "site.post"
-local file = require "site.file"
 local rss = require "site.rss"
-local css = require "site.css"
 local sitemap = require "site.sitemap"
 
 local pages = require "blog.pages"
 local styles = require "blog.styles"
+local c = require "blog.config"
 local blog = {}
 
-local site_url = "https://olexsmir.github.io"
-local output_dir = "build"
-local assets_dir = "assets"
-local posts_dir = "posts"
-
 local function prepare()
-  if file.is_dir(output_dir) then
-    vim.print("deleting " .. output_dir)
-    file.rm(output_dir)
+  if file.is_dir(c.build.output) then
+    vim.print("deleting " .. c.build.output)
+    file.rm(c.build.output)
   end
-  vim.print("mkdir-ing " .. output_dir)
-  file.mkdir(output_dir)
 
-  vim.print("copying " .. assets_dir)
-  file.copy(assets_dir, vim.fs.joinpath(output_dir, assets_dir))
+  vim.print("mkdir-ing " .. c.build.output)
+  file.mkdir(c.build.output)
+
+  vim.print("copying " .. c.build.assets)
+  file.copy_dir(c.build.assets, vim.fs.joinpath(c.build.output, c.build.assets))
 end
 
 local function write(fpath, data)
-  local path = vim.fs.joinpath(output_dir, fpath)
+  local path = vim.fs.joinpath(c.build.output, fpath)
 
   vim.print("writing " .. path)
   file.write(path, data)
@@ -40,33 +37,31 @@ end
 function blog.build()
   ---@type site.Post[]
   local posts = vim
-    .iter(file.list_dir(posts_dir))
+    .iter(file.list_dir(c.build.posts))
     :map(function(fname)
-      return post.read_file(posts_dir .. "/" .. fname)
+      return post.read_file(vim.fs.joinpath(c.build.posts, fname))
     end)
     :totable()
-  post.sort_by_date(posts)
 
-  ---@type site.Post[]
-  local recent_posts = vim.iter(posts):slice(1, 5):totable()
+  post.sort_by_date(posts)
 
   prepare()
 
-  -- stylua: ignore
-  write("feed.xml", rss.rss(posts, {
-    email = "olexsmir@cock.li",
-    name = "olexsmir",
-    title = "olexsmir's blog",
-    subtitle = "olexsmir's blog feed",
-    feed_url = site_url .. "/feed.xml",
-    home_url = site_url,
-  }))
-
-  write("sitemap.xml", sitemap.sitemap(posts, { site_url = site_url }))
+  write("sitemap.xml", sitemap.sitemap(posts, { site_url = c.url }))
   write("style.css", css.style(styles))
   write_page("404.html", pages.not_found())
-  write_page("index.html", pages.home(recent_posts))
+  write_page("index.html", pages.home())
   write_page("posts.html", pages.posts(posts))
+
+  -- stylua: ignore
+  write("feed.xml", rss.rss(posts, {
+    email = c.email,
+    name = c.name,
+    title = c.title,
+    subtitle = c.feed.subtitle;
+    feed_url = c.feed.url,
+    home_url = c.url,
+  }))
 
   for _, p in pairs(posts) do
     write(p.meta.slug .. ".html", html.render_page(pages.post(p)))

@@ -1,6 +1,6 @@
-local h = require "site.html"
 local a = require "site.html.attribute"
 local formatDate = require("site.date").date
+local h = require "site.html"
 local rss = {}
 
 function rss.escape_html(html)
@@ -11,10 +11,9 @@ function rss.escape_html(html)
     ['"'] = "&quot;",
     ["'"] = "&#39;",
   }
-  -- Remove or replace problematic characters
-  html = html:gsub("[\r\n\t]", " ") -- Convert whitespace to spaces
-  html = html:gsub("[%z\1-\8\11-\12\14-\31]", "") -- Remove control chars
 
+  html = html:gsub("[\r\n\t]", " ") -- whitespace to spaces
+  html = html:gsub("[%z\1-\8\11-\12\14-\31]", "") -- remove control chars
   return (html:gsub("[&<>\"']", function(c)
     return map[c]
   end))
@@ -41,7 +40,7 @@ function rss.rss(posts, config)
   return [[<?xml version="1.0" encoding="utf-8"?>]]
     .. h.render(h.el("feed", { a.attr("xmlns", "http://www.w3.org/2005/Atom") }, {
       h.title({}, { h.text(config.title) }),
-      h.el("subtitle", {}, { h.text "olexsmir's blog feed" }),
+      h.el("subtitle", {}, { h.text(config.subtitle) }),
       h.el("id", {}, { h.text(config.home_url .. "/") }),
       h.link { a.href(config.home_url), a.attr("rel", "alternate") },
       h.link {
