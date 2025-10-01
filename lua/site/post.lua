@@ -7,7 +7,7 @@ local post = {}
 ---@field title string
 ---@field date string
 ---@field slug string
----@field [string] string
+---@field desc string
 
 ---@class site.Post
 ---@field content string
@@ -22,6 +22,7 @@ function post.read_file(fpath)
   assert(meta["title"] ~= nil, (fpath .. " doesn't have title"))
   assert(meta["date"] ~= nil, (fpath .. " doesn't have date"))
   assert(meta["slug"] ~= nil, (fpath .. " doesn't have slug"))
+  assert(meta["desc"] ~= nil, (fpath .. " doesn't have description"))
 
   return { meta = meta, content = markdown(content) }
 end
