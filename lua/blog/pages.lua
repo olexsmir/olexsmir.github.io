@@ -52,6 +52,7 @@ local function header()
   return h.el("header", {}, {
     h.el("nav", {}, {
       h.p({}, {
+        h.a({ a.href "/" }, { h.text "home" }),
         h.a({ a.href "/posts" }, { h.text "posts" }),
         h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
         h.a({ a.href "/feed.xml" }, { h.text "rss" }),
@@ -79,19 +80,12 @@ local function list_posts(posts)
     :totable()
 end
 
----@param recent_posts site.Post[]
 ---@return site.HtmlNote
-function pages.home(recent_posts)
+function pages.home()
   return with_body("olexsmir", "A personal blog where I share my thoughts", {
     header(),
     h.main({}, {
-      h.p({}, {
-        h.text "Hi, and welcome to my blog.",
-      }),
-      h.div({}, {
-        h.el("h2", {}, { h.text "Recent posts" }),
-        h.ul({ a.class "blog-posts" }, list_posts(recent_posts)),
-      }),
+      h.p({}, { h.text "Hi, and welcome to my blog." }),
     }),
   })
 end
