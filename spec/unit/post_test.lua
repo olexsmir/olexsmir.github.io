@@ -9,6 +9,7 @@ post["read fixture"] = function()
   t.eq(inp.meta.date, "2025-09-30")
   t.eq(inp.meta.slug, "testing")
   t.eq(inp.meta.title, "This is fixture")
+  t.eq(inp.meta.desc, "testing testers test")
 
   t.eq(inp.content, "<h1>Content</h1>\n<p>Here's the content.</p>")
 end
