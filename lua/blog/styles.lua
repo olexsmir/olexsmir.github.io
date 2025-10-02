@@ -1,14 +1,13 @@
 return {
   [":root"] = {
     ["--width"] = "720px",
-    ["--font-main"] = "Verdana, sans-serif",
-    ["--font-secondary"] = "Verdana, sans-serif",
+    ["--font-main"] = "sans-serif",
     ["--font-scale"] = "1em",
     ["--background-color"] = "#1a1b26",
     ["--heading-color"] = "#a9b1d6",
     ["--text-color"] = "#c0caf5",
     ["--link-color"] = "#7dcfff",
-    ["--visited-color"] = " #1abc9c",
+    ["--visited-color"] = "#3273dc",
     ["--code-background-color"] = "#414868",
     ["--code-color"] = "#7aa2f7",
     ["--blockquote-color"] = "#ccc",
@@ -27,7 +26,6 @@ return {
     },
   },
 
-  header = { padding_bottom = "0.3rem" },
   body = {
     font_family = "var(--font-secondary)",
     font_size = "var(--font-scale)",
@@ -42,10 +40,22 @@ return {
     color = "var(--text-color)",
   },
 
+  main = { line_height = "1.6" },
+
   ["h1, h2, h3, h4, h5, h6"] = {
     font_family = "var(--font-main)",
     color = "var(--heading-color)",
   },
+
+  header = { padding_bottom = "0.3rem" },
+
+  footer = {
+    padding = "25px 0",
+    text_align = "center",
+  },
+
+  ["nav a"] = { margin_right = "8px" },
+  ["nav p"] = { margin_bottom = "0px" },
 
   a = {
     color = "var(--link-color)",
@@ -55,12 +65,9 @@ return {
     ["&:hover"] = { text_decoration = "underline" },
   },
 
-  main = { line_height = "1.6" },
   table = { width = "100%" },
   img = { max_width = "100%" },
-  ["nav a"] = { margin_right = "8px" },
   ["strong, b"] = { color = "var(--heading-color)" },
-  [".inline"] = { width = "auto !important" },
 
   button = {
     margin = "0",
@@ -69,7 +76,7 @@ return {
 
   time = {
     font_family = "monospace",
-    font_style = "normal",
+    font_style = "italic",
     font_size = "15px",
   },
 
@@ -93,17 +100,18 @@ return {
     font_style = "italic",
   },
 
-  footer = {
-    padding = "25px 0",
-    text_align = "center",
+  i = {
+    font_style = "italic",
   },
 
   [".title"] = {
     h1 = {
       font_size = "1.5em",
-    },
-    [":hover"] = {
-      text_decoration = "none",
+      margin_top = "0px",
+
+      ["&:hover"] = {
+        text_decoration = "none",
+      },
     },
   },
 
@@ -117,6 +125,8 @@ return {
     overflow_x = "auto",
   },
 
+  [".inline"] = { width = "auto !important" },
+
   ul = {
     ["&.blog-posts"] = {
       list_style_type = "none",
@@ -125,5 +135,13 @@ return {
     ["&.blog-posts li"] = { display = "flex" },
     ["&.blog-posts li span"] = { flex = "0 0 130px" },
     ["&.blog-posts li a:visited "] = { color = "var(--visited-color)" },
+  },
+
+  [".blog-title"] = {
+    h1 = {
+      margin_top = "0px",
+      margin_bottom = "0px",
+    },
+    p = { margin_top = "0px" },
   },
 }

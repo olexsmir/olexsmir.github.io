@@ -53,8 +53,8 @@ css["deep nesting"] = function()
       padding = "10px",
       [".inner"] = {
         margin = 0,
-        span = { fontWeight = "bold", },
-        ["&:hover"] = { color = "blue", },
+        span = { fontWeight = "bold" },
+        ["&:hover"] = { color = "blue" },
       },
     },
   }
@@ -79,8 +79,14 @@ css[":root"] = function()
     [":root"] = {
       ["--h1-size"] = "3rem",
     },
+
+    ["@media (true)"] = {
+      ["--h1-size"] = "2rem",
+    },
+
+    h1 = { font_size = "0px" },
   }
-  t.eq(c.style(rules), [[:root{--h1-size:3rem;}]])
+  t.eq(c.style(rules), [[:root{--h1-size:3rem;}@media (true){--h1-size:2rem;}h1{font-size:0px;}]])
 end
 
 return T

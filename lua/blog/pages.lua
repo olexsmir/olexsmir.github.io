@@ -86,6 +86,7 @@ function pages.posts(posts)
   return with_body("posts", {
     header(),
     h.main({}, {
+      h.p({}, { h.text "It ain't much, but it's honest work." }),
       h.ul({ a.class "blog-posts" }, list_posts(posts)),
     }),
   })
@@ -97,9 +98,11 @@ function pages.post(post)
   return with_body(post.meta.title, {
     header(),
     h.main({}, {
-      h.h1({}, { h.text(post.meta.title) }),
-      h.p({}, {
-        h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
+      h.div({ a.class "blog-title" }, {
+        h.h1({}, { h.text(post.meta.title) }),
+        h.p({}, {
+          h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
+        }),
       }),
       h.raw(post.content),
     }),
