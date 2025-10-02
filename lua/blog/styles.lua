@@ -85,12 +85,22 @@ return {
     border_top = "1px dashed",
   },
 
+  pre = {
+    background_color = "var(--code-background-color)",
+    padding = "10px",
+    border_radius = "3px",
+    overflow_x = "auto",
+
+    code = {
+      background_color = "transparent",
+      padding = "0",
+      border_radius = "0",
+    },
+  },
+
   code = {
     font_family = "monospace",
-    padding = "2px",
-    background_color = "var(--code-background-color)",
-    color = "var(--code-color)",
-    border_radius = "3px",
+    background_color = "transparent",
   },
 
   blockquote = {
@@ -113,16 +123,6 @@ return {
         text_decoration = "none",
       },
     },
-  },
-
-  [".highlight, .code"] = {
-    padding = "1px 15px",
-    color = "var(--code-color)",
-    background_color = "var(--code-background-color)",
-    border_radius = "3px",
-    margin_block_start = "1em",
-    margin_block_end = "1em",
-    overflow_x = "auto",
   },
 
   [".inline"] = { width = "auto !important" },
