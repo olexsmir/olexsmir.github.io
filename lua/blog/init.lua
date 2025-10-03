@@ -39,7 +39,7 @@ function blog.build()
   local posts = vim
     .iter(file.list_dir(c.build.posts))
     :map(function(fname)
-      return post.read_file(vim.fs.joinpath(c.build.posts, fname))
+      return post.read_file { c.build.posts, fname }
     end)
     :totable()
 

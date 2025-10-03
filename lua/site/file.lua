@@ -1,42 +1,53 @@
 local file = {}
 
----@param dir_path string
+---@alias site.FilePath string|string[]
+
+---@param p site.FilePath
+---@return string
+function file.to_path(p)
+  if type(p) == "table" then
+    return vim.fs.joinpath(unpack(p))
+  end
+  return p
+end
+
+---@param path site.FilePath
 ---@return string[]
-function file.list_dir(dir_path)
-  return vim.fn.readdir(dir_path)
+function file.list_dir(path)
+  return vim.fn.readdir(file.to_path(path))
 end
 
----@param fpath string
-function file.read(fpath)
-  return vim.fn.readfile(fpath)
+---@param path site.FilePath
+function file.read(path)
+  return vim.fn.readfile(file.to_path(path))
 end
 
----@param fpath string
+---@param path site.FilePath
 ---@param content string
-function file.write(fpath, content)
-  vim.fn.writefile({ content }, fpath)
+function file.path(path, content)
+  vim.fn.writefile({ content }, file.to_path(path))
 end
 
----@param path string
+---@param path site.FilePath
 function file.rm(path)
-  vim.fs.rm(path, { force = true, recursive = true })
+  vim.fs.rm(file.to_path(path), { force = true, recursive = true })
 end
 
 ---@param path string
 function file.mkdir(path)
-  vim.fn.mkdir(path, "p")
+  vim.fn.mkdir(file.to_path(path), "p")
 end
 
----@param fpath string
-function file.is_dir(fpath)
-  local build_dir_stats = vim.uv.fs_stat(fpath)
+---@param path string
+function file.is_dir(path)
+  local build_dir_stats = vim.uv.fs_stat(file.to_path(path))
   return not build_dir_stats or build_dir_stats.type == "directory"
 end
 
 ---@param from string
 ---@param to string
 function file.copy_dir(from, to)
-  file.mkdir(to)
+  file.mkdir(file.to_path(to))
   for _, f in ipairs(vim.fn.readdir(from)) do
     vim.uv.fs_copyfile(vim.fs.joinpath(from, f), vim.fs.joinpath(to, f))
   end
