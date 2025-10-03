@@ -19,6 +19,13 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: install chroma
+        run: |
+          wget https://github.com/alecthomas/chroma/releases/download/v2.20.0/chroma-2.20.0-linux-amd64.tar.gz
+          tar -xzf chroma-2.20.0-linux-amd64.tar.gz
+          sudo mv chroma /usr/local/bin/chroma
+          chroma --version
+
       - name: build
         run: make build
 
