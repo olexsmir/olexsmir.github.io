@@ -1,5 +1,6 @@
 local css = require "site.css"
 local file = require "site.file"
+local highlighter = require "site.highlighter"
 local html = require "site.html"
 local post = require "site.post"
 local rss = require "site.rss"
@@ -49,6 +50,7 @@ function blog.build()
 
   write("sitemap.xml", sitemap.sitemap(posts, { site_url = c.url }))
   write("style.css", css.style(styles))
+  write("chroma.css", highlighter.css())
   write_page("404.html", pages.not_found())
   write_page("index.html", pages.home())
   write_page("posts.html", pages.posts(posts))
@@ -64,7 +66,9 @@ function blog.build()
   }))
 
   for _, p in pairs(posts) do
-    write(p.meta.slug .. ".html", html.render_page(pages.post(p)))
+    local phtml = html.render_page(pages.post(p))
+    phtml = highlighter.html(phtml)
+    write(p.meta.slug .. ".html", phtml)
   end
 end
 

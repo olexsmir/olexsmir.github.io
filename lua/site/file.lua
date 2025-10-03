@@ -24,8 +24,8 @@ end
 
 ---@param path site.FilePath
 ---@param content string
-function file.path(path, content)
-  vim.fn.writefile({ content }, file.to_path(path))
+function file.write(path, content)
+  vim.fn.writefile(vim.split(content, "\n", { plain = true }), file.to_path(path))
 end
 
 ---@param path site.FilePath

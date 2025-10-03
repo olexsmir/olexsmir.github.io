@@ -4,8 +4,9 @@ local c = require "blog.config"
 local pages = {}
 
 ---@param page_title string
+---@param code_css boolean
 ---@param body site.HtmlNote[]
-local function with_body(page_title, body)
+local function with_body(page_title, code_css, body)
   return h.el("html", { a.attr("lang", "en") }, {
     h.el("head", {}, {
       h.title({}, { h.text(page_title) }),
@@ -20,10 +21,8 @@ local function with_body(page_title, body)
         a.attr("title", c.feed.subtitle),
         a.href(c.feed.url),
       },
-      h.link {
-        a.attr("rel", "stylesheet"),
-        a.href "style.css",
-      },
+      h.link { a.attr("rel", "stylesheet"), a.href "style.css" },
+      code_css and h.link { a.attr("rel", "stylesheet"), a.href "chroma.css" } or nil,
       h.link {
         a.attr("rel", "shortcut icon"),
         a.attr("type", "image/svg+xml"),
@@ -74,7 +73,7 @@ end
 
 ---@return site.HtmlNote
 function pages.home()
-  return with_body("olexsmir", {
+  return with_body("olexsmir", false, {
     header(),
     h.main({}, {
       h.p({}, { h.text "Hi, and welcome to my blog." }),
@@ -83,7 +82,7 @@ function pages.home()
 end
 
 function pages.posts(posts)
-  return with_body("posts", {
+  return with_body("olexsmir's blog", false, {
     header(),
     h.main({}, {
       h.p({}, { h.text "It ain't much, but it's honest work." }),
@@ -95,7 +94,7 @@ end
 ---@param post site.Post
 ---@return site.HtmlNote
 function pages.post(post)
-  return with_body(post.meta.title, {
+  return with_body(post.meta.title, true, {
     header(),
     h.main({}, {
       h.div({ a.class "blog-title" }, {
@@ -110,7 +109,7 @@ function pages.post(post)
 end
 
 function pages.not_found()
-  return with_body("Not found", {
+  return with_body("Not found", false, {
     header(),
     h.main({}, {
       h.h1({}, { h.text "There's nothing here!" }),
