@@ -46,7 +46,7 @@ local function header()
         h.a({ a.href "/" }, { h.text "home" }),
         h.a({ a.href "/posts" }, { h.text "posts" }),
         h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
-        h.a({ a.href "/feed.xml" }, { h.text "rss" }),
+        h.a({ a.href "/feed.xml" }, { h.text "feed" }),
       }),
     }),
     h.a({ a.class "title", a.href "/" }, {
