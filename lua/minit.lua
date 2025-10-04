@@ -33,7 +33,7 @@ vim.opt.packpath:append(root ".tests/site")
 require("mini.test").setup {
   collect = {
     find_files = function()
-      return vim.fn.globpath("spec", "**/*_test.lua", true, true)
+      return vim.fn.globpath("lua/tests", "**/*_test.lua", true, true)
     end,
   },
 }

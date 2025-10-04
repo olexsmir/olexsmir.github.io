@@ -1,4 +1,4 @@
-local t = require "spec.testutils"
+local t = require "tests.testutils"
 local _, T, file = t.setup "filee"
 
 local f = require "site.file"

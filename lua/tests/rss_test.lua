@@ -1,4 +1,4 @@
-local t = require "spec.testutils"
+local t = require "tests.testutils"
 local _, T, rss = t.setup "rss"
 
 local r = require "site.rss"

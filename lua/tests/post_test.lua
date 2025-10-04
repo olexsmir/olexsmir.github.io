@@ -1,10 +1,10 @@
-local t = require "spec.testutils"
+local t = require "tests.testutils"
 local _, T, post = t.setup "post"
 
 local p = require "site.post"
 
 post["read fixture"] = function()
-  local inp = p.read_file "./spec/fixture.md"
+  local inp = p.read_file { "lua", "tests", "fixture.md" }
 
   t.eq(inp.meta.date, "2025-09-30")
   t.eq(inp.meta.slug, "testing")

@@ -1,4 +1,4 @@
-local t = require "spec.testutils"
+local t = require "tests.testutils"
 local _, T, frontmatter = t.setup "frontmatter"
 
 local f = require "site.frontmatter"
