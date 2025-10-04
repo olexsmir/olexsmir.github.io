@@ -3,13 +3,12 @@ local h = require "site.html"
 local c = require "blog.config"
 local pages = {}
 
----@param page_title string
----@param code_css boolean
----@param body site.HtmlNote[]
-local function with_body(page_title, code_css, body)
+---@param o {title:string, desc:string, has_code:boolean, body:site.HtmlNote[]}
+---@return site.HtmlNote
+local function with_body(o)
   return h.el("html", { a.attr("lang", "en") }, {
     h.el("head", {}, {
-      h.title({}, { h.text(page_title) }),
+      h.title({}, { h.text(o.title) }),
       h.meta { a.attr("charset", "utf-8") },
       h.meta {
         a.attr("name", "viewport"),
@@ -22,81 +21,95 @@ local function with_body(page_title, code_css, body)
         a.href(c.feed.url),
       },
       h.link { a.attr("rel", "stylesheet"), a.href "style.css" },
-      code_css and h.link { a.attr("rel", "stylesheet"), a.href "chroma.css" } or nil,
+      o.has_code and h.link { a.attr("rel", "stylesheet"), a.href "chroma.css" } or nil,
       h.link {
         a.attr("rel", "shortcut icon"),
         a.attr("type", "image/svg+xml"),
         a.href "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ctext%20y='.9em'%20font-size='90'%3E🌀%3C/text%3E%3C/svg%3E",
       },
-      -- h.meta { a.attr("name", "description"), a.attr("content", page_desc) },
-      -- h.meta { a.attr("property", "og:description"), a.attr("content", page_desc) },
-      h.meta { a.attr("property", "og:site_name"), a.attr("content", page_title) },
-      h.meta { a.attr("property", "og:title"), a.attr("content", page_title) },
+      h.meta { a.attr("name", "description"), a.attr("content", o.desc) },
+      h.meta { a.attr("property", "og:description"), a.attr("content", o.desc) },
+      h.meta { a.attr("property", "og:site_name"), a.attr("content", o.title) },
+      h.meta { a.attr("property", "og:title"), a.attr("content", o.title) },
       h.meta { a.attr("property", "og:type"), a.attr("content", "website") },
-      -- TODO: add twitter meta props
     }),
-    h.el("body", { a.class "home" }, body),
-  })
-end
-
-local function header()
-  return h.el("header", {}, {
-    h.nav({}, {
-      h.p({}, {
-        h.a({ a.href "/" }, { h.text "home" }),
-        h.a({ a.href "/posts" }, { h.text "posts" }),
-        h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
-        h.a({ a.href "/feed.xml" }, { h.text "feed" }),
-      }),
-    }),
-    h.a({ a.class "title", a.href "/" }, {
-      h.h1({}, { h.text(c.title) }),
-    }),
-  })
-end
-
-local function list_posts(posts)
-  return vim
-    .iter(posts)
-    :map(function(post)
-      return h.li({ a.href(post.meta.slug) }, {
-        h.span({}, {
-          h.el("i", {}, {
-            h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
+    h.el("body", { a.class "home" }, {
+      h.el("header", {}, {
+        h.nav({}, {
+          h.p({}, {
+            h.a({ a.href "/" }, { h.text "home" }),
+            h.a({ a.href "/posts" }, { h.text "posts" }),
+            h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
+            h.a({ a.href "/feed.xml" }, { h.text "feed" }),
           }),
         }),
-        h.a({ a.href(post.meta.slug) }, { h.text(post.meta.title) }),
-      })
-    end)
-    :totable()
+        h.a({ a.class "title", a.href "/" }, {
+          h.h1({}, { h.text(c.title) }),
+        }),
+      }),
+      o.body,
+    }),
+  })
 end
 
----@return site.HtmlNote
 function pages.home()
-  return with_body("olexsmir", false, {
-    header(),
-    h.main({}, {
+  return with_body {
+    title = "olexsmir",
+    desc = "olexsmir's blog",
+    body = h.main({}, {
       h.p({}, { h.text "Hi, and welcome to my blog." }),
     }),
-  })
+  }
 end
 
-function pages.posts(posts)
-  return with_body("olexsmir's blog", false, {
-    header(),
-    h.main({}, {
-      h.p({}, { h.text "It ain't much, but it's honest work." }),
-      h.ul({ a.class "blog-posts" }, list_posts(posts)),
+function pages.not_found()
+  return with_body {
+    title = "Not found",
+    desc = "Page you're looking for, not found",
+    body = h.main({}, {
+      h.h1({}, { h.text "There's nothing here!" }),
+      h.p({}, {
+        h.text "Go pack to the ",
+        h.a({ a.href "/" }, { h.text "home page" }),
+      }),
     }),
-  })
+  }
+end
+
+---@param posts site.Post[]
+function pages.posts(posts)
+  return with_body {
+    title = "all olexsmir's posts",
+    desc = "List of all blog posts on this site.",
+    body = h.main({}, {
+      h.p({}, { h.text "It ain't much, but it's honest work." }),
+      h.ul(
+        { a.class "blog-posts" },
+        vim
+          .iter(posts)
+          :map(function(post)
+            return h.li({ a.href(post.meta.slug) }, {
+              h.span({}, {
+                h.el("i", {}, {
+                  h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
+                }),
+              }),
+              h.a({ a.href(post.meta.slug) }, { h.text(post.meta.title) }),
+            })
+          end)
+          :totable()
+      ),
+    }),
+  }
 end
 
 ---@param post site.Post
----@return site.HtmlNote
 function pages.post(post)
-  return with_body(post.meta.title, true, {
-    header(),
-    h.main({}, {
+  return with_body {
+    title = post.meta.title,
+    desc = 'Blog post titled: "' .. post.meta.title .. '"',
+    has_code = true,
+    body = h.main({}, {
       h.div({ a.class "blog-title" }, {
         h.h1({}, { h.text(post.meta.title) }),
         h.p({}, {
@@ -105,20 +118,7 @@ function pages.post(post)
       }),
       h.raw(post.content),
     }),
-  })
-end
-
-function pages.not_found()
-  return with_body("Not found", false, {
-    header(),
-    h.main({}, {
-      h.h1({}, { h.text "There's nothing here!" }),
-      h.p({}, {
-        h.text "Go pack to the ",
-        h.a({ a.href "/" }, { h.text "home page" }),
-      }),
-    }),
-  })
+  }
 end
 
 return pages
