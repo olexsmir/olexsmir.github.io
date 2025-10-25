@@ -25,12 +25,16 @@ end
 ---@param path site.FilePath
 ---@param content string
 function file.write(path, content)
-  vim.fn.writefile(vim.split(content, "\n", { plain = true }), file.to_path(path))
+  path = file.to_path(path)
+  vim.print("writing " .. path)
+  vim.fn.writefile(vim.split(content, "\n", { plain = true }), path)
 end
 
 ---@param path site.FilePath
 function file.rm(path)
-  vim.fs.rm(file.to_path(path), { force = true, recursive = true })
+  path = file.to_path(path)
+  vim.print("deleting " .. path)
+  vim.fs.rm(path, { force = true, recursive = true })
 end
 
 ---@param path string
@@ -47,7 +51,11 @@ end
 ---@param from string
 ---@param to string
 function file.copy_dir(from, to)
-  file.mkdir(file.to_path(to))
+  from = file.to_path(from)
+  to = file.to_path(to)
+  vim.print("copying " .. to)
+
+  file.mkdir(to)
   for _, f in ipairs(vim.fn.readdir(from)) do
     vim.uv.fs_copyfile(vim.fs.joinpath(from, f), vim.fs.joinpath(to, f))
   end

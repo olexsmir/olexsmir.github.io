@@ -11,24 +11,8 @@ local styles = require "blog.styles"
 local c = require "blog.config"
 local blog = {}
 
-local function prepare()
-  if file.is_dir(c.build.output) then
-    vim.print("deleting " .. c.build.output)
-    file.rm(c.build.output)
-  end
-
-  vim.print("mkdir-ing " .. c.build.output)
-  file.mkdir(c.build.output)
-
-  vim.print("copying " .. c.build.assets)
-  file.copy_dir(c.build.assets, vim.fs.joinpath(c.build.output, c.build.assets))
-end
-
 local function write(fpath, data)
-  local path = vim.fs.joinpath(c.build.output, fpath)
-
-  vim.print("writing " .. path)
-  file.write(path, data)
+  file.write({ c.build.output, fpath }, data)
 end
 
 local function write_page(fpath, node)
@@ -36,6 +20,14 @@ local function write_page(fpath, node)
 end
 
 function blog.build()
+  --- clean up
+  if file.is_dir(c.build.output) then
+    file.rm(c.build.output)
+  end
+  file.mkdir(c.build.output)
+  file.copy_dir(c.build.assets, vim.fs.joinpath(c.build.output, c.build.assets))
+
+  -- write the pages
   ---@type site.Post[]
   local posts = vim
     .iter(file.list_dir(c.build.posts))
@@ -43,10 +35,7 @@ function blog.build()
       return post.read_file { c.build.posts, fname }
     end)
     :totable()
-
   post.sort_by_date(posts)
-
-  prepare()
 
   write("sitemap.xml", sitemap.sitemap(posts, { site_url = c.url }))
   write("style.css", css.style(styles))
