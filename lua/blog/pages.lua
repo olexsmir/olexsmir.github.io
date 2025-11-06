@@ -75,8 +75,8 @@ end
 ---@param posts site.Post[]
 function pages.posts(posts)
   return with_body {
-    title = "all olexsmir's posts",
-    desc = "List of all blog posts on this site.",
+    title = "All olexsmir's posts",
+    desc = "List of all blog posts on the site.",
     body = h.main({}, {
       h.p({}, { h.text "It ain't much, but it's honest work." }),
       h.ul(
@@ -101,10 +101,11 @@ end
 
 ---@param post site.Post
 function pages.post(post)
+  local has_code = post.content:match "code" ~= nil
   return with_body {
     title = post.meta.title,
-    desc = 'Blog post titled: "' .. post.meta.title .. '"',
-    has_code = true,
+    desc = "Blog post titled: " .. post.meta.title,
+    has_code = has_code,
     body = h.main({}, {
       h.div({ a.class "blog-title" }, {
         h.h1({}, { h.text(post.meta.title) }),
