@@ -3,6 +3,23 @@ local h = require "site.html"
 local c = require "blog.config"
 local pages = {}
 
+local function themeSwitcherScript()
+  local s = [[
+    const root = document.documentElement;
+    root.dataset.theme = localStorage.theme || 'light';
+    document.getElementById('theme-toggle').onclick = () => {
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      localStorage.theme = root.dataset.theme;
+    };
+  ]]
+
+  s = s:gsub("  ", "")
+  s = vim.split(s, "\n") ---@diagnostic disable-line: cast-local-type
+  s = table.concat(s, "")
+
+  return h.el("script", {}, { h.text(s) })
+end
+
 ---@param o {title:string, desc:string, has_code:boolean, body:site.HtmlNote[]}
 ---@return site.HtmlNote
 local function with_body(o)
@@ -45,16 +62,7 @@ local function with_body(o)
         }),
       }),
       o.body,
-      h.el("script", {}, {
-        h.text [[
-          const root = document.documentElement;
-          root.dataset.theme = localStorage.theme || 'light';
-          document.getElementById('theme-toggle').onclick = () => {
-            root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-            localStorage.theme = root.dataset.theme;
-          };
-        ]],
-      }),
+      themeSwitcherScript(),
     }),
   })
 end
