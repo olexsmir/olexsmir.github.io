@@ -72,7 +72,14 @@ function pages.home()
     title = c.title,
     desc = c.title,
     body = h.main({}, {
-      h.p({}, { h.text "Hi, and welcome to my blog." }),
+      h.p({}, {
+        h.text "Hi, and welcome to my blog.",
+        h.br(),
+        h.text "I'm a gopher from Ukraine 🇺🇦, still don't know how to exit from vim.",
+        h.br(),
+        h.br(),
+        h.text "If you want to reach me, all contacts can be found on github.",
+      }),
     }),
   }
 end

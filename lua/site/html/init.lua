@@ -138,6 +138,8 @@ function html.h1(attributes, children) return html.el("h1", attributes, children
 ---@param children site.HtmlNote[]
 function html.nav(attributes, children) return html.el("nav", attributes, children) end
 
+function html.br() return html.el("br", {}, {}) end
+
 -- stylua: ignore end
 
 return html
