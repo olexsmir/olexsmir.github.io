@@ -69,8 +69,8 @@ end
 
 function pages.home()
   return with_body {
-    title = "olexsmir",
-    desc = "olexsmir's blog",
+    title = c.title,
+    desc = c.title,
     body = h.main({}, {
       h.p({}, { h.text "Hi, and welcome to my blog." }),
     }),
