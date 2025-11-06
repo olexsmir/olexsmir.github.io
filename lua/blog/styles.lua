@@ -14,18 +14,23 @@ return {
     ["--blockquote-border"] = "#4a4d56",
   },
 
-  ["@media (prefers-color-scheme: light)"] = {
-    [":root"] = {
-      ["--background-color"] = "#fff",
-      ["--heading-color"] = "#0d122b",
-      ["--text-color"] = "#434648",
-      ["--link-color"] = "#003fff",
-      ["--visited-color"] = "#0036c7",
-      ["--code-background-color"] = "#d8dbe2",
-      ["--code-color"] = "#333638",
-      ["--blockquote-color"] = "#525b66",
-      ["--blockquote-border"] = "#c4c8cc",
-    },
+  ["[data-theme='light']"] = {
+    ["--background-color"] = "#fff",
+    ["--heading-color"] = "#0d122b",
+    ["--text-color"] = "#434648",
+    ["--link-color"] = "#003fff",
+    ["--visited-color"] = "#0036c7",
+    ["--code-background-color"] = "#d8dbe2",
+    ["--code-color"] = "#333638",
+    ["--blockquote-color"] = "#525b66",
+    ["--blockquote-border"] = "#c4c8cc",
+  },
+
+  ["#theme-toggle"] = {
+    border_radius = "4px",
+    background = "transparent",
+
+    ["&:hover"] = { opacity = "0.6" },
   },
 
   body = {

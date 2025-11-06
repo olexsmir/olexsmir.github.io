@@ -37,6 +37,7 @@ local function with_body(o)
             h.a({ a.href "/posts" }, { h.text "posts" }),
             h.a({ a.href "https://github.com/olexsmir" }, { h.text "github" }),
             h.a({ a.href "/feed.xml" }, { h.text "feed" }),
+            h.el("button", { a.id "theme-toggle" }, { h.text "🌓" }),
           }),
         }),
         h.a({ a.class "title", a.href "/" }, {
@@ -44,6 +45,16 @@ local function with_body(o)
         }),
       }),
       o.body,
+      h.el("script", {}, {
+        h.text [[
+          const root = document.documentElement;
+          root.dataset.theme = localStorage.theme || 'light';
+          document.getElementById('theme-toggle').onclick = () => {
+            root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+            localStorage.theme = root.dataset.theme;
+          };
+        ]],
+      }),
     }),
   })
 end
