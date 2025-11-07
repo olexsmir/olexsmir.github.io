@@ -30,7 +30,11 @@ end
 function highlighter.css()
   local res = vim.system({ "chroma", chroma_theme, "--formatter=html", "--html-styles" }):wait()
   assert(res.code == 0, "Couldn't get css styles using chroma")
-  return res.stdout
+
+  local css = res.stdout or ""
+  css = css:gsub("/%*.-%*/ ", "")
+  css = css:gsub("\n$", "")
+  return css
 end
 
 --- Highlight code blocks in HTML string
