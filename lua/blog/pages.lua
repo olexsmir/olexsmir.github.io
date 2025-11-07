@@ -109,6 +109,9 @@ function pages.posts(posts)
         { a.class "blog-posts" },
         vim
           .iter(posts)
+          :filter(function(post)
+            return not post.hidden
+          end)
           :map(function(post)
             return h.li({ a.href(post.meta.slug) }, {
               h.span({}, {
