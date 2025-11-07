@@ -72,8 +72,13 @@ return {
     ["&:hover"] = { text_decoration = "underline" },
   },
 
+  img = {
+    max_width = "100%",
+    display = "block",
+    justify_self = "center",
+  },
+
   table = { width = "100%" },
-  img = { max_width = "100%" },
   ["strong, b"] = { color = "var(--heading-color)" },
 
   button = {
