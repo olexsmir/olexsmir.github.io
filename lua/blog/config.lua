@@ -2,7 +2,7 @@ local config = {}
 
 config.name = "olexsmir"
 config.title = "olexsmir's blog"
-config.email = "olexsmir@cock.li"
+config.email = "olexsmir@gmail.com"
 config.cname = "olexsmir.xyz"
 config.url = "https://" .. config.cname
 config.feed = {
