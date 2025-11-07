@@ -3,10 +3,10 @@
 CMD=nvim --clean -u ./lua/minit.lua
 
 test:
-	$(CMD) --headless -c "lua MiniTest.run()"
+	@$(CMD) --headless -c "lua MiniTest.run()"
 
 build:
-	$(CMD) -l ./lua/build.lua
+	@$(CMD) -l ./lua/build.lua
 
 dev:
 	@watchexec --watch posts --watch lua --exts lua,md -- "make build" &
