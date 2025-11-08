@@ -1,7 +1,7 @@
 local t = require "tests.testutils"
 local _, T, frontmatter = t.setup "frontmatter"
 
-local f = require "site.frontmatter"
+local f = require "lego.frontmatter"
 
 frontmatter["should extract from frontmatter"] = function()
   local input = {

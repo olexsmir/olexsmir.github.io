@@ -1,15 +1,16 @@
+local a = require "lego.html.attribute"
 local html = {}
 
----@class site.HtmlNote
+---@class lego.HtmlNote
 ---@field tag string
 ---@field text? string
----@field attributes site.HtmlAttribute[]
----@field children site.HtmlNote[]
+---@field attributes lego.HtmlAttribute[]
+---@field children lego.HtmlNote[]
 
 ---@param tag string
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
----@return site.HtmlNote
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
+---@return lego.HtmlNote
 function html.el(tag, attributes, children)
   local attrs = {}
   for _, attr_table in ipairs(attributes or {}) do
@@ -26,13 +27,13 @@ function html.el(tag, attributes, children)
 end
 
 ---@param text string
----@return site.HtmlNote
+---@return lego.HtmlNote
 function html.text(text)
   return { text = text }
 end
 
 ---@param html_str string
----@return site.HtmlNote
+---@return lego.HtmlNote
 function html.raw(html_str)
   return { text = html_str }
 end
@@ -53,7 +54,7 @@ local _self_closing_tags = {
   wbr = {},
 }
 
----@param node site.HtmlNote
+---@param node lego.HtmlNote
 ---@return string
 function html.render(node)
   if node.text then
@@ -92,53 +93,60 @@ end
 -- --- COMMON ELEMENTS
 -- stylua: ignore start
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.div(attributes, children) return html.el("div", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.main(attributes, children) return html.el("main", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
+---@param attributes lego.HtmlAttribute[]
 function html.meta(attributes) return html.el("meta", attributes, {}) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.span(attributes, children) return html.el("span", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.p(attributes, children) return html.el("p", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.a(attributes, children) return html.el("a", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.ul(attributes, children) return html.el("ul", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.li(attributes, children) return html.el("li", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.title(attributes, children) return html.el("title", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
+---@param attributes lego.HtmlAttribute[]
 function html.link(attributes) return html.el("link", attributes, {}) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.h1(attributes, children) return html.el("h1", attributes, children) end
 
----@param attributes site.HtmlAttribute[]
----@param children site.HtmlNote[]
+---@param attributes lego.HtmlAttribute[]
+---@param children lego.HtmlNote[]
 function html.nav(attributes, children) return html.el("nav", attributes, children) end
 
 function html.br() return html.el("br", {}, {}) end
+
+---@param datetime string
+function html.time(datetime)
+  return html.el("time",
+    { a.attr("datetime", datetime) },
+    { html.text(datetime)})
+end
 
 -- stylua: ignore end
 

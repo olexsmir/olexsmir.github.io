@@ -1,7 +1,7 @@
 local t = require "tests.testutils"
 local _, T, rss = t.setup "rss"
 
-local r = require "site.rss"
+local r = require "lego.rss"
 
 rss["should escape html"] = function()
   local input = "<p>Hello <a>world</a></p>"

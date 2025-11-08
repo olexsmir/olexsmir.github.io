@@ -1,8 +1,8 @@
 local t = require "tests.testutils"
 local _, T, html = t.setup "html"
 
-local h = require "site.html"
-local a = require "site.html.attribute"
+local a = require "lego.html.attribute"
+local h = require "lego.html"
 
 html["simple html"] = function()
   local node = h.el("div", {}, { h.text "hello" })
@@ -16,11 +16,7 @@ html["simple html with attrs"] = function()
 end
 
 html["self-closing tag"] = function()
-  local node = h.el(
-    "img",
-    { a.attr("src", "image.png"), a.attr("alt", "Alt text") },
-    {}
-  )
+  local node = h.el("img", { a.attr("src", "image.png"), a.attr("alt", "Alt text") }, {})
   t.eq(h.render(node), [[<img alt="Alt text" src="image.png">]])
 end
 
@@ -30,10 +26,7 @@ html["nested html"] = function()
     h.p({}, { h.text "Paragraph" }),
   })
 
-  t.eq(
-    h.render(node),
-    [[<div class="container"><h1>Title</h1><p>Paragraph</p></div>]]
-  )
+  t.eq(h.render(node), [[<div class="container"><h1>Title</h1><p>Paragraph</p></div>]])
 end
 
 html["even more nested html"] = function()

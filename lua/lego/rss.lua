@@ -1,6 +1,6 @@
-local a = require "site.html.attribute"
-local formatDate = require("site.date").date
-local h = require "site.html"
+local a = require "lego.html.attribute"
+local formatDate = require("lego.date").date
+local h = require "lego.html"
 local rss = {}
 
 function rss.escape_html(html)
@@ -20,12 +20,12 @@ function rss.escape_html(html)
 end
 
 ---@param config {feed_url:string, home_url:string, title:string, name:string, email:string, subtitle:string}
----@param posts site.Post[]
+---@param posts lego.Post[]
 ---@return string
 function rss.rss(posts, config)
   local entries = vim
     .iter(posts)
-    ---@param post site.Post
+    ---@param post lego.Post
     :map(function(post)
       return h.el("entry", {}, {
         h.title({}, { h.text(post.meta.title) }),

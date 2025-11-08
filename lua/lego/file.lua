@@ -1,8 +1,8 @@
 local file = {}
 
----@alias site.FilePath string|string[]
+---@alias lego.FilePath string|string[]
 
----@param p site.FilePath
+---@param p lego.FilePath
 ---@return string
 function file.to_path(p)
   if type(p) == "table" then
@@ -11,18 +11,18 @@ function file.to_path(p)
   return p
 end
 
----@param path site.FilePath
+---@param path lego.FilePath
 ---@return string[]
 function file.list_dir(path)
   return vim.fn.readdir(file.to_path(path))
 end
 
----@param path site.FilePath
+---@param path lego.FilePath
 function file.read(path)
   return vim.fn.readfile(file.to_path(path))
 end
 
----@param path site.FilePath
+---@param path lego.FilePath
 ---@param content string
 function file.write(path, content)
   path = file.to_path(path)
@@ -30,7 +30,7 @@ function file.write(path, content)
   vim.fn.writefile(vim.split(content, "\n", { plain = true }), path)
 end
 
----@param path site.FilePath
+---@param path lego.FilePath
 function file.rm(path)
   path = file.to_path(path)
   vim.print("deleting " .. path)

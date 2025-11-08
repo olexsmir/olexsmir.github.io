@@ -1,7 +1,7 @@
 local t = require "tests.testutils"
 local _, T, post = t.setup "post"
 
-local p = require "site.post"
+local p = require "lego.post"
 
 post["read fixture"] = function()
   local inp = p.read_file { "lua", "tests", "fixture.md" }

@@ -1,6 +1,6 @@
-local a = require "site.html.attribute"
-local formatDate = require("site.date").date
-local h = require "site.html"
+local a = require "lego.html.attribute"
+local formatDate = require("lego.date").date
+local h = require "lego.html"
 local sitemap = {}
 
 ---@param opts {url:string, date:string, priority: string}
@@ -12,13 +12,13 @@ local function url(opts)
   })
 end
 
----@param posts site.Post[]
+---@param posts lego.Post[]
 ---@param config {site_url:string}
 ---@return string
 function sitemap.sitemap(posts, config)
   local urls = vim
     .iter(posts)
-    ---@param post site.Post
+    ---@param post lego.Post
     :map(function(post)
       return url {
         url = config.site_url .. "/" .. post.meta.slug,

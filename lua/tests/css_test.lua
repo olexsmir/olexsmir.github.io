@@ -1,7 +1,7 @@
 local t = require "tests.testutils"
 local _, T, css = t.setup "css"
 
-local c = require "site.css"
+local c = require "lego.css"
 
 css["simple css"] = function()
   local rules = {

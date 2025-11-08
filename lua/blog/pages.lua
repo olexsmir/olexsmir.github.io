@@ -1,6 +1,6 @@
-local a = require "site.html.attribute"
-local h = require "site.html"
+local a = require "lego.html.attribute"
 local c = require "blog.config"
+local h = require "lego.html"
 local pages = {}
 
 local function themeSwitcherScript()
@@ -20,9 +20,9 @@ local function themeSwitcherScript()
   return h.el("script", {}, { h.text(s) })
 end
 
----@param o {title:string, desc:string, has_code:boolean, body:site.HtmlNote[]}
----@return site.HtmlNote
-local function with_body(o)
+---@param o {title:string, desc:string, has_code:boolean, body:lego.HtmlNote[]}
+---@return lego.HtmlNote
+local function with_page(o)
   return h.el("html", { a.attr("lang", "en") }, {
     h.el("head", {}, {
       h.title({}, { h.text(o.title) }),
@@ -68,7 +68,7 @@ local function with_body(o)
 end
 
 function pages.home()
-  return with_body {
+  return with_page {
     title = c.title,
     desc = c.title,
     body = h.main({}, {
@@ -85,7 +85,7 @@ function pages.home()
 end
 
 function pages.not_found()
-  return with_body {
+  return with_page {
     title = "Not found",
     desc = "Page you're looking for, not found",
     body = h.main({}, {
@@ -98,11 +98,11 @@ function pages.not_found()
   }
 end
 
----@param posts site.Post[]
+---@param posts lego.Post[]
 function pages.posts(posts)
-  return with_body {
+  return with_page {
     title = "All olexsmir's posts",
-    desc = "List of all blog posts on the site.",
+    desc = "List of all blog posts on the lego.",
     body = h.main({}, {
       h.p({}, { h.text "It ain't much, but it's honest work." }),
       h.ul(
@@ -115,9 +115,7 @@ function pages.posts(posts)
           :map(function(post)
             return h.li({ a.href(post.meta.slug) }, {
               h.span({}, {
-                h.el("i", {}, {
-                  h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
-                }),
+                h.el("i", {}, { h.time(post.meta.date) }),
               }),
               h.a({ a.href(post.meta.slug) }, { h.text(post.meta.title) }),
             })
@@ -128,19 +126,17 @@ function pages.posts(posts)
   }
 end
 
----@param post site.Post
+---@param post lego.Post
 function pages.post(post)
   local has_code = post.content:match "code" ~= nil
-  return with_body {
+  return with_page {
     title = post.meta.title,
     desc = "Blog post titled: " .. post.meta.title,
     has_code = has_code,
     body = h.main({}, {
       h.div({ a.class "blog-title" }, {
         h.h1({}, { h.text(post.meta.title) }),
-        h.p({}, {
-          h.el("time", { a.attr("datetime", post.meta.date) }, { h.text(post.meta.date) }),
-        }),
+        h.p({}, { h.time(post.meta.date) }),
       }),
       h.raw(post.content),
     }),

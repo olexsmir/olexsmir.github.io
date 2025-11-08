@@ -1,21 +1,21 @@
-local file = require "site.file"
-local frontmatter = require "site.frontmatter"
-local markdown = require "site.markdown"
+local file = require "lego.file"
+local frontmatter = require "lego.frontmatter"
+local markdown = require "lego.markdown"
 local post = {}
 
----@class site.Post
+---@class lego.Post
 ---@field content string
 ---@field hidden boolean
----@field meta site.PostMeta
+---@field meta lego.PostMeta
 
----@class site.PostMeta
+---@class lego.PostMeta
 ---@field title string
 ---@field date string
 ---@field slug string
 ---@field desc string
 
----@param fpath site.FilePath
----@return site.Post
+---@param fpath lego.FilePath
+---@return lego.Post
 function post.read_file(fpath)
   local p = file.read(fpath)
   local content = table.concat(frontmatter.content(p) or {}, "\n")
@@ -33,7 +33,7 @@ function post.read_file(fpath)
 end
 
 ---MUTATES THE TABLE
----@param posts site.Post[]
+---@param posts lego.Post[]
 function post.sort_by_date(posts)
   table.sort(posts, function(a, b)
     return a.meta.date > b.meta.date

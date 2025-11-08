@@ -1,11 +1,11 @@
 local hattribute = {}
 
----@class site.HtmlAttribute
+---@class lego.HtmlAttribute
 ---@field [string] string
 
 ---@param attribute string
 ---@param value string
----@return site.HtmlAttribute
+---@return lego.HtmlAttribute
 function hattribute.attr(attribute, value)
   return { [attribute] = value }
 end

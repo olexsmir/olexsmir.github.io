@@ -1,14 +1,14 @@
-local css = require "site.css"
-local file = require "site.file"
-local highlighter = require "site.highlighter"
-local html = require "site.html"
-local post = require "site.post"
-local rss = require "site.rss"
-local sitemap = require "site.sitemap"
+local css = require "lego.css"
+local file = require "lego.file"
+local highlighter = require "lego.highlighter"
+local html = require "lego.html"
+local post = require "lego.post"
+local rss = require "lego.rss"
+local sitemap = require "lego.sitemap"
 
+local c = require "blog.config"
 local pages = require "blog.pages"
 local styles = require "blog.styles"
-local c = require "blog.config"
 local blog = {}
 
 local function write(fpath, data)
@@ -28,7 +28,7 @@ function blog.build()
   file.copy_dir(c.build.assets, vim.fs.joinpath(c.build.output, c.build.assets))
 
   -- write the pages
-  ---@type site.Post[]
+  ---@type lego.Post[]
   local posts = vim
     .iter(file.list_dir(c.build.posts))
     :map(function(fname)
@@ -37,10 +37,10 @@ function blog.build()
     :totable()
   post.sort_by_date(posts)
 
+  write("CNAME", c.cname)
+  write("chroma.css", highlighter.css())
   write("sitemap.xml", sitemap.sitemap(posts, { site_url = c.url }))
   write("style.css", css.style(styles))
-  write("chroma.css", highlighter.css())
-  write("CNAME", c.cname)
   write_page("404.html", pages.not_found())
   write_page("index.html", pages.home())
   write_page("posts.html", pages.posts(posts))
