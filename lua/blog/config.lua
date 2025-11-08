@@ -6,8 +6,8 @@ config.email = "olexsmir@gmail.com"
 config.cname = "olexsmir.xyz"
 config.url = "https://" .. config.cname
 config.feed = {
-  subtitle = "olexsmir's blog feed",
   url = config.url .. "/feed.xml",
+  subtitle = "olexsmir's blog feed, also hi rss reader!",
 }
 
 config.build = {

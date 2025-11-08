@@ -69,8 +69,8 @@ end
 
 function pages.home()
   return with_page {
-    title = c.title,
-    desc = c.title,
+    title = "olexsmir.xyz",
+    desc = "olexsmir.xyz home page",
     body = h.main({}, {
       h.p({}, {
         h.text "Hi, and welcome to my blog.",
@@ -78,7 +78,11 @@ function pages.home()
         h.text "I'm a gopher from Ukraine 🇺🇦, still don't know how to exit from vim.",
         h.br(),
         h.br(),
-        h.text "If you want to reach me, all contacts can be found on github.",
+        h.text "If you want to reach me, you can mail me at: ",
+        h.a({ a.href("mailto:" .. c.email) }, {
+          h.el("i", {}, { h.text(c.email) }),
+        }),
+        h.text ".",
       }),
     }),
   }
@@ -128,11 +132,10 @@ end
 
 ---@param post lego.Post
 function pages.post(post)
-  local has_code = post.content:match "code" ~= nil
   return with_page {
     title = post.meta.title,
     desc = "Blog post titled: " .. post.meta.title,
-    has_code = has_code,
+    has_code = post.content:match "code" ~= nil,
     body = h.main({}, {
       h.div({ a.class "blog-title" }, {
         h.h1({}, { h.text(post.meta.title) }),
