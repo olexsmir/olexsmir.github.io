@@ -4,18 +4,17 @@ local highlighter = {}
 --- use nvim's treesitter for parsing, but it's just easier to use chroma
 --- https://github.com/alecthomas/chroma
 
-local chroma_theme = "--style=tokyonight-night"
-
 ---@param lang string
 ---@param code string
-local function chroma(lang, code)
+---@param theme string
+local function chroma(lang, code, theme)
   assert(lang ~= "", "Language is not provided")
   assert(code ~= "", "Code is not provided")
 
   local res = vim
     .system({
       "chroma",
-      chroma_theme,
+      "--style=" .. theme,
       "--formatter=html",
       "--filename=a." .. lang,
       "--html-only",
@@ -26,9 +25,17 @@ local function chroma(lang, code)
   return res.stdout
 end
 
+---@param theme string
 ---@return string
-function highlighter.css()
-  local res = vim.system({ "chroma", chroma_theme, "--formatter=html", "--html-styles" }):wait()
+function highlighter.css(theme)
+  local res = vim
+    .system({
+      "chroma",
+      "--style=" .. theme,
+      "--formatter=html",
+      "--html-styles",
+    })
+    :wait()
   assert(res.code == 0, "Couldn't get css styles using chroma")
 
   local css = res.stdout or ""
@@ -39,11 +46,12 @@ end
 
 --- Highlight code blocks in HTML string
 ---@param html string
+---@param theme string
 ---@return string
-function highlighter.html(html)
+function highlighter.html(html, theme)
   -- stylua: ignore
   local res = html:gsub('(<pre><code class="language%-([^"]+)">(.-)</code></pre>)', function(_, lang, code)
-    return chroma(lang, code)
+    return chroma(lang, code, theme)
   end)
   return res
 end

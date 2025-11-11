@@ -38,7 +38,7 @@ function blog.build()
   post.sort_by_date(posts)
 
   write("CNAME", c.cname)
-  write("chroma.css", highlighter.css())
+  write("chroma.css", highlighter.css(c.build.chroma_theme))
   write("sitemap.xml", sitemap.sitemap(posts, { site_url = c.url }))
   write("style.css", css.style(styles))
   write_page("404.html", pages.not_found())
@@ -57,7 +57,7 @@ function blog.build()
 
   for _, p in pairs(posts) do
     local phtml = html.render_page(pages.post(p))
-    phtml = highlighter.html(phtml)
+    phtml = highlighter.html(phtml, c.build.chroma_theme)
     write(p.meta.slug .. ".html", phtml)
   end
 end

@@ -14,6 +14,8 @@ config.build = {
   output = "build",
   assets = "assets",
   posts = "posts",
+
+  chroma_theme = "tokyonight-night"
 }
 
 return config
