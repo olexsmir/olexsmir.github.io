@@ -12,7 +12,6 @@ function rss.escape_html(html)
     ["'"] = "&#39;",
   }
 
-  html = html:gsub("[\r\n\t]", " ") -- whitespace to spaces
   html = html:gsub("[%z\1-\8\11-\12\14-\31]", "") -- remove control chars
   return (html:gsub("[&<>\"']", function(c)
     return map[c]
