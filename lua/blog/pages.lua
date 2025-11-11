@@ -76,8 +76,8 @@ function pages.home()
         h.text "Hi, and welcome to my blog.",
         h.br(),
         h.text "I'm a gopher from Ukraine 🇺🇦, still don't know how to exit from vim.",
-        h.br(),
-        h.br(),
+      }),
+      h.p({}, {
         h.text "If you want to reach me, you can mail me at: ",
         h.a({ a.href("mailto:" .. c.email) }, {
           h.el("i", {}, { h.text(c.email) }),
