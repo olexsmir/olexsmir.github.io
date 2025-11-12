@@ -112,7 +112,9 @@ return {
 
   code = {
     font_family = "monospace",
-    background_color = "transparent",
+    background_color = "var(--code-background-color)",
+    white_space = "pre-wrap",
+    padding = "0 0.3em"
   },
 
   blockquote = {
