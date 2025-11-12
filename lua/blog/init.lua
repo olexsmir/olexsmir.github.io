@@ -36,6 +36,7 @@ function blog.build()
     end)
     :totable()
   post.sort_by_date(posts)
+  post.list_duplicates(posts)
 
   write("CNAME", c.cname)
   write("chroma.css", highlighter.css(c.build.chroma_theme))

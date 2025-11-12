@@ -40,4 +40,35 @@ function post.sort_by_date(posts)
   end)
 end
 
+---@param posts lego.Post[]
+function post.list_duplicates(posts)
+  local groups = {}
+  for _, p in ipairs(posts) do
+    groups[p.meta.slug] = groups[p.meta.slug] or {}
+    table.insert(groups[p.meta.slug], p)
+  end
+
+  local duplicates = vim
+    .iter(groups)
+    :filter(function(_, v)
+      return #v >= 2
+    end)
+    :map(function(slug, ps)
+      return {
+        slug = slug,
+        posts = vim
+          .iter(ps)
+          :map(function(p)
+            return { title = p.meta.title, slug = p.meta.slug }
+          end)
+          :totable(),
+      }
+    end)
+    :totable()
+
+  if #duplicates > 0 then
+    vim.print("duplicates " .. vim.inspect(duplicates))
+  end
+end
+
 return post
